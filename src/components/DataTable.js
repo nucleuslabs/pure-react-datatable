@@ -34,21 +34,21 @@ export default class DataTable extends React.PureComponent {
     }
     
     render() {
-        const {theme,columns,dataIdFromObject,language} = this.props;
+        const {theme,columns,language,columnKey,rowKey} = this.props;
         const {data,loading} = this.state;
         // console.log(data);
         return (
             <table className={theme.table}>
                 <thead className={theme.thead}>
                     <cc.tr className={[theme.tr,theme.hrow]}>
-                        {columns.map((col,idx) => (
-                            <cc.th key={col.name || `col${idx}`} className={[theme.cell,theme.th,col.className]}>{call(col.title)}</cc.th>
+                        {columns.map((col,n) => (
+                            <cc.th key={columnKey(col,n)} className={[theme.cell,theme.th,col.className]}>{call(col.title)}</cc.th>
                         ))}
                     </cc.tr>
                 </thead>
                 <tbody>
                     {data.length ? data.map((row,m) => (
-                        <cc.tr key={dataIdFromObject(row,m)} className={[theme.tr,theme.drow,m%2===0?theme.even:theme.odd]}>
+                        <cc.tr key={rowKey(row,m)} className={[theme.tr,theme.drow,m%2===0?theme.even:theme.odd]}>
                             {columns.map((col,n) => {
                                 
                                 // https://datatables.net/reference/option/columns.render
@@ -78,7 +78,7 @@ export default class DataTable extends React.PureComponent {
                                     })
                                 }
                                 
-                                return <cc.td className={[theme.cell,theme.td,col.className]}>{data}</cc.td>
+                                return <cc.td key={columnKey(col,n)} className={[theme.cell,theme.td,col.className]}>{data}</cc.td>
                             })}
                         </cc.tr>
                     )) : (
@@ -120,11 +120,15 @@ DataTable.propTypes = {
 
         // This string is shown in preference to language.zeroRecords when the table is empty of data (regardless of filtering) - i.e. there are zero records in the table.
         emptyTable: PropTypes.node,
-    })
+    }),
+    // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
+    rowKey: PropTypes.func,
+    columnKey: PropTypes.func,
 }
 
 DataTable.defaultProps = {
-    dataIdFromObject: (row,idx) => row._id || row.id || row._key || row.key || idx, 
+    rowKey: (row,idx) => row._id || row.id || row._key || row.key || idx, 
+    columnKey: (col,idx) => col._id || col.id || col._key || col.key || col.name || idx, 
     language: {
         loadingRecords: "Loading...",
         zeroRecords: "No matching records found",

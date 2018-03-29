@@ -3,6 +3,7 @@ import ErrorBoundary from './ErrorBoundary';
 import {hot} from 'react-hot-loader'
 import DataTable from './DataTable';
 import StarEmpty from '../icons/star-empty.svg';
+import StarFull from '../icons/star-solid.svg';
 import CheckCircle from '../icons/check-circle.svg';
 import TimesCircle from '../icons/times-circle.svg';
 import Icon from './Icon';
@@ -17,22 +18,26 @@ function sleep(ms) {
 
 const SAMPLE_DATA = [
     {
+        _id: 14770,
         firstName: "Christopher",
         lastName: "Peek",
-        fileNo: '14770',
+        fileNo: 'N0830671',
         dob: '14-May-1983',
         age: '34 yrs',
         active: true,
         gender: 'M',
+        starred: true,
     },
     {
+        _id: 64701,
         firstName: "Tonya",
         lastName: "Carr",
-        fileNo: '64701',
+        fileNo: 'N1100308',
         dob: '31-Mar-1977',
         age: '40 yrs',
         active: false,
         gender: 'F',
+        starred: false,
     },
 ]
 
@@ -40,7 +45,7 @@ const SAMPLE_DATA = [
 const config = {
     
     async data({draw,start,length,search,order,columns}) {
-        await sleep(500); // pretend we're waiting for the server :p
+        await sleep(1000); // pretend we're waiting for the server :p
         return {
             draw,
             recordsTotal: SAMPLE_DATA.length,
@@ -53,7 +58,9 @@ const config = {
         {
             title: <Icon><StarEmpty/></Icon>,
             data: 'starred',
-            render: _ => <Icon><StarEmpty/></Icon>,
+            render: ({data}) => data
+                ? <Icon className={css.star}><StarFull/></Icon>
+                : <Icon className={css.nostar}><StarEmpty/></Icon>,
             className: css.center,
         },
         {
@@ -67,6 +74,7 @@ const config = {
         {
             title: "File #",
             data: 'fileNo',
+            className: css.mono,
         },
         {
             title: "DOB",
@@ -82,12 +90,11 @@ const config = {
             render: ({data}) => data 
                 ? <Icon className={css.active}><CheckCircle/></Icon>
                 : <Icon className={css.inactive}><TimesCircle/></Icon>,
-                
-                
             className: css.center,
         },
     ]
 }
+
 
 function App() {
 
