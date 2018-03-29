@@ -2,9 +2,6 @@
     border-collapse: collapse;
     border-bottom: 1px solid #111111;
     width: 100%;
-
-    font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-    font-size: 12px;
 }
 
 .th {
@@ -12,8 +9,23 @@
     border-width: 0 1px 1px 1px;
     border-color: #B6C8DA;
     border-style: solid;
+    text-align: left;
+ 
     
-    &:last-child {
-        border-right-width: 0;
+    &:first-child {
+        border-left: none;
     }
+    &:last-child {
+        border-right: 0;
+    }
+}
+
+.cell {
+    padding: 2px 5px;
+}
+
+
+.loadingRecordsCell {
+    padding: 100px 0;
+    text-align: center;
 }

@@ -1,4 +1,4 @@
-import {ProvidePlugin,IgnorePlugin,NamedModulesPlugin,HotModuleReplacementPlugin} from 'webpack';
+import {ProvidePlugin, IgnorePlugin, NamedModulesPlugin, HotModuleReplacementPlugin} from 'webpack';
 
 const src = `${__dirname}/src`;
 const publicDir = `${__dirname}/public`;
@@ -28,31 +28,40 @@ let lessLoader = {
     }
 };
 
+const babelLoader = {
+    loader: 'babel-loader',
+    options: {
+        cacheDirectory: true,
+        forceEnv: 'development'
+    }
+}
 
 export default {
     context: `${__dirname}/src`,
     mode: 'development',
-    entry: [
-        'react-hot-loader/patch',
-        `${__dirname}/src/index.js`,
-    ],
+    entry: {
+        app: [
+            'react-hot-loader/patch',
+            `${__dirname}/src/index.js`,
+        ], 
+        base: `${__dirname}/src/styles/base.less`
+    },
     output: {
         path: publicDir,
-        filename: 'bundle.js',
+        filename: '[name].js',
         publicPath: '/',
         pathinfo: true,
         crossOriginLoading: 'anonymous'
+    },
+    resolveLoader: {
+        modules: ['node_modules', `${__dirname}/webpack/loaders`]
     },
     module: {
         rules: [
             {
                 test: /\.jsx?$/,
-                loader: 'babel-loader',
+                use: babelLoader,
                 include: src,
-                options: {
-                    cacheDirectory: true,
-                    forceEnv: 'development'
-                }
             },
             {
                 test: /\.(jpe?g|png|gif)($|\?)/i,
@@ -64,7 +73,7 @@ export default {
             },
             {
                 test: /\.svg($|\?)/i,
-                loader: 'raw-loader',
+                use: [babelLoader, 'svg-loader'],
             },
             {
                 test: /\.css$/,
