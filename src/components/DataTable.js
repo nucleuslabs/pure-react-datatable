@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import cc from '../react-classcat'
 import {call, getValue, isFunction} from '../util';
@@ -8,96 +8,165 @@ export default class DataTable extends React.PureComponent {
     draw = 0;
     state = {
         start: 0,
-        length: 20,
+        length: 10,
         data: [],
-        loading: true,
+        loading: false,
+        error: null,
+        recordsTotal: null,
+        recordsFiltered: null,
     }
     
     async componentDidMount() {
         // this.setState({loading: true})
-        let resp = await this.props.data({
-            draw: ++this.draw,
-            start: this.state.start,
-            length: this.state.length,
-            search: {
-                value: '',
-                regex: false,
-            },
-            order: [],
-            columns: this.props.columns,
-        })
-        if(resp.draw < this.draw) return;
+        if(isFunction(this.props.data)) {
+            this.setState({loading: true})
+            // https://datatables.net/manual/server-side
+            let resp = await this.props.data({
+                draw: ++this.draw,
+                start: this.state.start,
+                length: this.state.length,
+                search: {
+                    value: '',
+                    regex: false,
+                },
+                order: [],
+                columns: this.props.columns,
+            })
+            if(resp.draw < this.draw) return;
+            this.setState({
+                data: resp.data,
+                loading: false,
+                recordsTotal: resp.recordsTotal,
+                recordsFiltered: resp.recordsFiltered,
+                error: resp.error,
+            })
+        } else if(Array.isArray(this.props.data)) {
+            let data = this.props.data.slice(this.state.start,this.state.length)
+            this.setState({
+                data,
+                recordsTotal: this.props.data.length,
+                recordsFiltered: this.props.data.length,
+            })
+        }
+    }
+    
+    get pageCount() {
+        return this.state.recordsFiltered == null ? null : Math.ceil(this.state.recordsFiltered/this.state.length);
+    }
+    
+    changeLength = ev => {
         this.setState({
-            data: resp.data,
-            loading: false,
+            length: parseInt(ev.target.value),
         })
     }
     
     render() {
-        const {theme,columns,language,columnKey,rowKey} = this.props;
-        const {data,loading} = this.state;
+        const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
+        const {data,loading,recordsFiltered,recordsTotal,start,length} = this.state;
         // console.log(data);
         return (
-            <table className={theme.table}>
-                <thead className={theme.thead}>
-                    <cc.tr className={[theme.tr,theme.hrow]}>
-                        {columns.map((col,n) => (
-                            <cc.th key={columnKey(col,n)} className={[theme.cell,theme.th,col.className]}>{call(col.title)}</cc.th>
-                        ))}
-                    </cc.tr>
-                </thead>
-                <tbody>
-                    {data.length ? data.map((row,m) => (
-                        <cc.tr key={rowKey(row,m)} className={[theme.tr,theme.drow,m%2===0?theme.even:theme.odd]}>
-                            {columns.map((col,n) => {
-                                
-                                // https://datatables.net/reference/option/columns.render
-                                
-                                
-                                // console.log(row,col,m,n);
-                                // let value;
-                                // if(Array.isArray(row)) {
-                                //     value 
-                                // }
-                                let data;
-                        
-                                if(col.data) {
-                                    data = getValue(row, col.data);
-                                } else {
-                                    data = row[n];
-                                }
-                                if(col.render) {
-                                    data = React.createElement(col.render, {
-                                        data: data,
-                                        type: 'display',
-                                        row,
-                                        meta: {
-                                            row: m,
-                                            col: n,
-                                        }
-                                    })
-                                }
-                                
-                                return <cc.td key={columnKey(col,n)} className={[theme.cell,theme.td,col.className]}>{data}</cc.td>
-                            })}
+            <cc.div className={theme.wrapper}>
+                <cc.div className={[theme.controlBar,theme.searchBar]}>
+                    <cc.div className={theme.lengthWrap}>
+                        <label>Show <select value={length} onChange={this.changeLength}>
+                            {lengthMenu.map(len => (
+                                <option key={len} value={len}>{len}</option>
+                            ))}
+                        </select> entries</label>
+                    </cc.div>
+                    <cc.div className={theme.searchWrap}>
+                        <label><span>Search:</span><input type="search"/></label>
+                    </cc.div>
+                </cc.div>
+                
+                <cc.table className={theme.table}>
+                    <cc.thead className={theme.thead}>
+                        <cc.tr className={[theme.tr,theme.hrow]}>
+                            {columns.map((col,n) => (
+                                <cc.th key={columnKey(col,n)} className={[theme.cell,theme.th,col.className]}>{call(col.title)}</cc.th>
+                            ))}
                         </cc.tr>
-                    )) : (
-                        loading ? (<cc.tr className={[theme.tr,theme.loadingRecordsRow]}>
-                                <cc.td className={[theme.td,theme.loadingRecordsCell]} colSpan={columns.length}>{language.loadingRecords}</cc.td>
-                            </cc.tr>)
-                            : (<cc.tr className={[theme.tr,theme.emptyTableRow]}>
-                                <cc.td className={[theme.td,theme.emptyTableCell]} colSpan={columns.length}>{language.emptyTable}</cc.td>
-                            </cc.tr>)
-                    )}
-                </tbody>
-            </table>
+                    </cc.thead>
+                    <cc.tbody>
+                        {data.length ? data.map((row,m) => (
+                            <cc.tr key={rowKey(row,m)} className={[theme.tr,theme.drow,m%2===0?theme.even:theme.odd]}>
+                                {columns.map((col,n) => {
+                                    
+                                    // https://datatables.net/reference/option/columns.render
+                                    
+                                    
+                                    // console.log(row,col,m,n);
+                                    // let value;
+                                    // if(Array.isArray(row)) {
+                                    //     value 
+                                    // }
+                                    let data;
+                            
+                                    if(col.data) {
+                                        data = getValue(row, col.data);
+                                    } else {
+                                        data = row[n];
+                                    }
+                                    if(col.render) {
+                                        data = React.createElement(col.render, {
+                                            data: data,
+                                            type: 'display',
+                                            row,
+                                            meta: {
+                                                row: m,
+                                                col: n,
+                                            }
+                                        })
+                                    }
+                                    
+                                    return <cc.td key={columnKey(col,n)} className={[theme.cell,theme.td,col.className]}>{data}</cc.td>
+                                })}
+                            </cc.tr>
+                        )) : (
+                            loading ? (
+                                    <cc.tr className={[theme.tr]}>
+                                        <cc.td className={[theme.td,theme.loading]} colSpan={columns.length}>{language.loadingRecords}</cc.td>
+                                    </cc.tr>
+                                ) : (
+                                    <cc.tr className={[theme.tr]}>
+                                        <cc.td className={[theme.td,theme.empty]} colSpan={columns.length}>{language.emptyTable}</cc.td>
+                                    </cc.tr>
+                                )
+                        )}
+                    </cc.tbody>
+                </cc.table>
+                
+                <cc.div className={[theme.controlBar,theme.infoBar]}>
+                    <cc.div className={theme.pageInfo}>
+                        Showing
+                        {start === 0 && length >= recordsFiltered 
+                            ? <Fragment> all </Fragment>
+                            : <Fragment> {start+1} to {Math.min(start+length,recordsFiltered)} of </Fragment>
+                        }
+                        {recordsFiltered} entries
+                        {recordsFiltered < recordsTotal && <Fragment> (filtered from {recordsTotal} total entries)</Fragment>}
+                    </cc.div>
+                    <cc.div className={theme.pagination}>
+                        <a href="" className={theme.button}>Previous</a>
+                        {range(1,this.pageCount).map(pg => (
+                            <a href="" className={theme.button}>{pg}</a>
+                        ))}
+                        <a href="" className={theme.button}>Next</a>
+                    </cc.div>
+                </cc.div>
+            </cc.div>
         )
     }
 }
 
+function range(start,end,step=1) {
+    const length = Math.floor((end-start)/step+1);
+    return Array.from({length}, (_,i) => i*step+start);
+}
+
 DataTable.propTypes = {
     theme: PropTypes.object,
-    data: PropTypes.func,
+    data: PropTypes.oneOfType([PropTypes.func,PropTypes.array]),
     columns: PropTypes.arrayOf(PropTypes.oneOfType([
         PropTypes.array,
         PropTypes.shape({
@@ -124,6 +193,7 @@ DataTable.propTypes = {
     // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
     rowKey: PropTypes.func,
     columnKey: PropTypes.func,
+    lengthMenu: PropTypes.arrayOf(PropTypes.number),
 }
 
 DataTable.defaultProps = {
@@ -133,5 +203,6 @@ DataTable.defaultProps = {
         loadingRecords: "Loading...",
         zeroRecords: "No matching records found",
         emptyTable: "No data available in table", 
-    }
+    },
+    lengthMenu: [ 10, 25, 50, 100 ],
 }

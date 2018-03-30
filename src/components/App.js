@@ -8,7 +8,7 @@ import CheckCircle from '../icons/check-circle.svg';
 import TimesCircle from '../icons/times-circle.svg';
 import Icon from './Icon';
 import css from '../styles/misc.less';
-
+import JOBS from '../data/jobs';
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
@@ -45,7 +45,7 @@ const SAMPLE_DATA = [
 const config = {
     
     async data({draw,start,length,search,order,columns}) {
-        await sleep(1000); // pretend we're waiting for the server :p
+        await sleep(500); // pretend we're waiting for the server :p
         return {
             draw,
             recordsTotal: SAMPLE_DATA.length,
@@ -95,11 +95,25 @@ const config = {
     ]
 }
 
+const jobsTable = {
+    // https://datatables.net/examples/data_sources/js_array.html
+    data: JOBS,
+    columns: [
+        { title: "Name" },
+        { title: "Position" },
+        { title: "Office" },
+        { title: "Extn." },
+        { title: "Start date" },
+        { title: "Salary" }
+    ]
+}
 
 function App() {
 
     return (
         <ErrorBoundary>
+            <DataTable theme={require('../styles/bridge')} {...jobsTable} />
+            <br/>
             <DataTable theme={require('../styles/datatable.less')} {...config} />
         </ErrorBoundary>
     )

@@ -93,7 +93,8 @@ export default {
     target: 'web',
     resolve: {
         modules: ['node_modules'],
-        extensions: ['.jsx', '.js'],
+        // https://webpack.js.org/configuration/resolve/#resolve-extensions
+        extensions: ['.js','.json','.less'],
     },
     devtool: 'cheap-module-source-map',
     plugins: [

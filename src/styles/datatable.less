@@ -6,17 +6,12 @@
 
 .th {
     background-color: #F5F8FA;
-    border-width: 0 1px 1px 1px;
     border-color: #B6C8DA;
     border-style: solid;
-    text-align: left;
- 
+    border-width: 0 0 1px 0;
     
-    &:first-child {
-        border-left: none;
-    }
-    &:last-child {
-        border-right: 0;
+    + .th {
+        border-left-width: 1px;
     }
 }
 
@@ -24,8 +19,57 @@
     padding: 2px 5px;
 }
 
+.td + .td {
+    border-left: 1px solid rgba(182, 200, 218, 0.333);
+}
 
-.loadingRecordsCell {
+.controlBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+}
+.infoBar {
+    margin-top: 2px;
+}
+
+.searchBar {
+    margin-bottom: 2px;
+}
+
+.searchWrap {
+    
+    input {
+        border-radius: 5px;
+        margin-left: 5px;
+        width: 175px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: #9A9A9A #EEEEEE #EEEEEE #9A9A9A
+    }
+}
+
+.pagination {
+    margin: -2px;
+}
+
+.button {
+    padding: 5px 10px;
+    display: inline-block;
+    margin: 2px;
+    text-decoration: none;
+    color: black;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    
+    &:hover {
+        border-color: #111111;
+        background: linear-gradient(to bottom, #585858 0%, #111111 100%);
+        color: white;
+    }
+}
+
+.loading {
     padding: 100px 0;
     text-align: center;
     background-color: #eee;

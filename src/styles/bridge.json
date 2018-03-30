@@ -1,0 +1,12 @@
+{
+    "wrapper": "dataTables_wrapper",
+    "table": ["dataTable","display","no-footer"],
+    "odd": "odd",
+    "even": "even",
+    "empty": "dataTables_empty",
+    "pagination": "dataTables_paginate",
+    "button": "paginate_button",
+    "pageInfo": "dataTables_info",
+    "searchWrap": "dataTables_filter",
+    "lengthWrap": "dataTables_length"
+}
