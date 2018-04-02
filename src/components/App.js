@@ -112,7 +112,7 @@ function App() {
 
     return (
         <ErrorBoundary>
-            <DataTable theme={require('../styles/bridge')} {...jobsTable} />
+            <DataTable theme={require('../styles/bridge')} {...jobsTable} searchDelay={16} lengthMenu={[5,10,20,100]} />
             <br/>
             <DataTable theme={require('../styles/datatable.less')} {...config} />
         </ErrorBoundary>

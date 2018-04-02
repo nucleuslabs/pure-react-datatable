@@ -1,28 +1,31 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
-import cc from '../react-classcat'
-import {call, debounce, getValue, isFunction} from '../util';
+import cc from 'classcat';
+import {call, debounce, getValue, isFunction, defaults, mergeState, range} from '../util';
 
 export default class DataTable extends React.PureComponent {
     
     draw = 0;
-    state = {
-        start: 0,
-        length: 10,
-        data: [],
-        loading: false,
-        error: null,
-        recordsTotal: null,
-        recordsFiltered: null,
-        search: {
-            value: '',
-            regex: false,
-        }
-    }
     
     constructor(props) {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
+        this.state = defaults(this.props, 
+            {
+                start: 0,
+                length: 10,
+                search: {
+                    value: '',
+                    regex: false,
+                },
+            }, {
+                recordsTotal: null,
+                recordsFiltered: null,
+                data: [],
+                loading: false,
+                error: null,
+            }
+        );
     }
     
     componentDidMount() {
@@ -43,6 +46,8 @@ export default class DataTable extends React.PureComponent {
                 columns: this.props.columns,
             })
             if(resp.draw < this.draw) return;
+            // TODO: if resp.data.length === resp.recordsTotal, switch to client-side filtering??
+            // TODO: if server over-fetches (returns enough for page 2) allow going to next page without re-fetching?
             const data = resp.data.slice(0, state.length);
             this.setState({
                 data,
@@ -52,11 +57,33 @@ export default class DataTable extends React.PureComponent {
                 error: resp.error,
             })
         } else if(Array.isArray(this.props.data)) {
-            const data = this.props.data.slice(state.start,state.length);
+            // TODO: pre-process the data; add a `key` and an integer version of number columns...
+            let filteredData = this.props.data;
+            if(state.search.value) {
+                if(state.search.regex) {
+                    try {
+                        const re = new RegExp(state.search.value, 'i');
+                        filteredData = filteredData.filter(row => this.props.columns.some((_,n) => {
+                            return re.test(this._getValue(row,n,'filter'))
+                        }));
+                    } catch(_) {}
+                } else {
+                    const searchTerms = state.search.value.trim().toLocaleLowerCase().split(/\s+/);
+                    filteredData = filteredData.filter(row => {
+                        const values = this.props.columns.map((_,n) => this._getValue(row,n,'filter').toLocaleLowerCase());
+                        return searchTerms.every(term => {
+                            return this.props.columns.some((_,n) => {
+                                return values[n].includes(term);
+                            })
+                        })
+                    });
+                }
+           
+            }
             this.setState({
-                data,
+                data: filteredData.slice(state.start,state.start+state.length),
                 recordsTotal: this.props.data.length,
-                recordsFiltered: this.props.data.length,
+                recordsFiltered: filteredData.length,
             })
         }
     }
@@ -66,20 +93,32 @@ export default class DataTable extends React.PureComponent {
     }
     
     changeLength = ev => {
-        this.setState({
-            length: parseInt(ev.target.value),
+        const makeState = mergeState({
+            length: parseInt(ev.target.value) || this.props.length
         })
+        this._refresh(makeState(this.state));
+        this.setState(makeState)
     }
     
     changeSearch = ev => {
-        const state = {
+        const makeState = mergeState({
             search: {
                 value: ev.target.value,
-                regex: false,
             }
+        })
+        this._refresh(makeState(this.state));
+        this.setState(makeState);
+    }
+    
+    _getValue(row, colIdx, type) {
+        // https://datatables.net/reference/option/columns.render
+        // TODO: support `type` and orthogonal data https://datatables.net/examples/ajax/orthogonal-data.html
+        const col = this.props.columns[colIdx];
+        if(col.data) {
+            return getValue(row, col.data);
+        } else {
+            return row[colIdx];
         }
-        this._refresh(state);
-        this.setState(state);
     }
     
     render() {
@@ -87,31 +126,31 @@ export default class DataTable extends React.PureComponent {
         const {data,loading,recordsFiltered,recordsTotal,start,length,search} = this.state;
         // console.log(data);
         return (
-            <cc.div className={theme.wrapper}>
-                <cc.div className={[theme.controlBar,theme.searchBar]}>
-                    <cc.div className={theme.lengthWrap}>
+            <div className={cc(theme.wrapper)}>
+                <div className={cc([theme.controlBar,theme.searchBar])}>
+                    <div className={cc(theme.lengthWrap)}>
                         <label>Show <select value={length} onChange={this.changeLength}>
                             {lengthMenu.map(len => (
                                 <option key={len} value={len}>{len}</option>
                             ))}
                         </select> entries</label>
-                    </cc.div>
-                    <cc.div className={theme.searchWrap}>
+                    </div>
+                    <div className={cc(theme.searchWrap)}>
                         <label><span>Search:</span><input type="search" value={search.value} onChange={this.changeSearch}/></label>
-                    </cc.div>
-                </cc.div>
+                    </div>
+                </div>
                 
-                <cc.table className={theme.table}>
-                    <cc.thead className={theme.thead}>
-                        <cc.tr className={[theme.tr,theme.hrow]}>
+                <table className={cc(theme.table)}>
+                    <thead className={cc(theme.thead)}>
+                        <tr className={cc([theme.tr,theme.hrow])}>
                             {columns.map((col,n) => (
-                                <cc.th key={columnKey(col,n)} className={[theme.cell,theme.th,col.className]}>{call(col.title)}</cc.th>
+                                <th key={columnKey(col,n)} className={cc([theme.cell,theme.th,col.className])}>{call(col.title)}</th>
                             ))}
-                        </cc.tr>
-                    </cc.thead>
-                    <cc.tbody>
+                        </tr>
+                    </thead>
+                    <tbody>
                         {data.length ? data.map((row,m) => (
-                            <cc.tr key={rowKey(row,m)} className={[theme.tr,theme.drow,m%2===0?theme.even:theme.odd]}>
+                            <tr key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
                                 {columns.map((col,n) => {
                                     
                                     // https://datatables.net/reference/option/columns.render
@@ -122,13 +161,7 @@ export default class DataTable extends React.PureComponent {
                                     // if(Array.isArray(row)) {
                                     //     value 
                                     // }
-                                    let data;
-                            
-                                    if(col.data) {
-                                        data = getValue(row, col.data);
-                                    } else {
-                                        data = row[n];
-                                    }
+                                    let data = this._getValue(row, n, 'display');
                                     if(col.render) {
                                         data = React.createElement(col.render, {
                                             data: data,
@@ -141,25 +174,25 @@ export default class DataTable extends React.PureComponent {
                                         })
                                     }
                                     
-                                    return <cc.td key={columnKey(col,n)} className={[theme.cell,theme.td,col.className]}>{data}</cc.td>
+                                    return <td key={columnKey(col,n)} className={cc([theme.cell,theme.td,col.className])}>{data}</td>
                                 })}
-                            </cc.tr>
+                            </tr>
                         )) : (
                             loading ? (
-                                    <cc.tr className={[theme.tr]}>
-                                        <cc.td className={[theme.td,theme.loading]} colSpan={columns.length}>{language.loadingRecords}</cc.td>
-                                    </cc.tr>
+                                    <tr className={[theme.tr]}>
+                                        <td className={cc([theme.td,theme.loading])} colSpan={columns.length}>{language.loadingRecords}</td>
+                                    </tr>
                                 ) : (
-                                    <cc.tr className={[theme.tr]}>
-                                        <cc.td className={[theme.td,theme.empty]} colSpan={columns.length}>{language.emptyTable}</cc.td>
-                                    </cc.tr>
+                                    <tr className={[theme.tr]}>
+                                        <td className={cc([theme.td,theme.empty])} colSpan={columns.length}>{language.emptyTable}</td>
+                                    </tr>
                                 )
                         )}
-                    </cc.tbody>
-                </cc.table>
+                    </tbody>
+                </table>
                 
-                <cc.div className={[theme.controlBar,theme.infoBar]}>
-                    <cc.div className={theme.pageInfo}>
+                <div className={cc([theme.controlBar,theme.infoBar])}>
+                    <div className={cc(theme.pageInfo)}>
                         Showing
                         {start === 0 && length >= recordsFiltered 
                             ? <Fragment> all </Fragment>
@@ -167,24 +200,21 @@ export default class DataTable extends React.PureComponent {
                         }
                         {recordsFiltered} entries
                         {recordsFiltered < recordsTotal && <Fragment> (filtered from {recordsTotal} total entries)</Fragment>}
-                    </cc.div>
-                    <cc.div className={theme.pagination}>
-                        <a href="" className={theme.button}>Previous</a>
+                    </div>
+                    <div className={cc(theme.pagination)}>
+                        <a href="" className={cc(theme.button)}>Previous</a>
                         {range(1,this.pageCount).map(pg => (
-                            <a key={pg} href="" className={theme.button}>{pg}</a>
+                            <a key={pg} href="" className={cc(theme.button)}>{pg}</a>
                         ))}
-                        <a href="" className={theme.button}>Next</a>
-                    </cc.div>
-                </cc.div>
-            </cc.div>
+                        <a href="" className={cc(theme.button)}>Next</a>
+                    </div>
+                </div>
+            </div>
         )
     }
 }
 
-function range(start,end,step=1) {
-    const length = Math.floor((end-start)/step+1);
-    return Array.from({length}, (_,i) => i*step+start);
-}
+
 
 DataTable.propTypes = {
     theme: PropTypes.object,

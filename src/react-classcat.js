@@ -1,8 +1,10 @@
+import React from 'react';
 import classcat from 'classcat';
 
 export default new Proxy(Object.create(null), {
     get(proxy, name) {
-        const el = ({className,...props}) => {
+        if(proxy[name]) return proxy[name];
+        const el = proxy[name] = ({className,...props}) => {
             if(className) {
                 className = classcat(className);
                 if(className) {

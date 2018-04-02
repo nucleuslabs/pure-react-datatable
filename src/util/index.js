@@ -1,4 +1,5 @@
 import stringToPath from './stringToPath';
+import {isFunction, isObject} from './types';
 
 export function getValue(obj, path, def) {
     if(!obj) return def;
@@ -29,4 +30,40 @@ export function debounce(fn, ms) {
         clearTimeout(timer);
         timer = setTimeout(() => fn.call(this, ...args), ms);
     }
+}
+
+export function defaults(source, target, forced) {
+    for(let key of Object.keys(target)) {
+        if(source[key] !== undefined) {
+            if(isObject(source[key])) {
+                target[key] = defaults(source[key], target[key]);
+            } else {
+                target[key] = source[key];
+            }
+        }
+    }
+    return Object.assign(target, forced);
+}
+
+function deepMerge(a, b) {
+    const out = {...a};
+    for(let k of Object.keys(b)) {
+        if(isFunction(b[k])) {
+            out[k] = b[k](a[k]);
+        } else if(isObject(a[k]) && isObject(b[k])) {
+            out[k] = deepMerge(a[k],b[k]);
+        } else {
+            out[k] = b[k];
+        }
+    }
+    return out;
+}
+
+export function mergeState(newState) {
+    return oldState => deepMerge(oldState,newState);
+}
+
+export function range(start,end,step=1) {
+    const length = Math.floor((end-start)/step+1);
+    return Array.from({length}, (_,i) => i*step+start);
 }

@@ -63,7 +63,7 @@ export function isNullish(obj) {
 }
 
 export function isObject(obj) {
-    return obj !== null && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
+    return obj != null && typeof obj === 'object';
 }
 
 export function isPlainObject(obj) {
