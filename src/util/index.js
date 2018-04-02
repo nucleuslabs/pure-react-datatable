@@ -22,3 +22,11 @@ export * from './types';
 export function call(fn, ...args) {
     return typeof fn === 'function' ? fn.call(this, ...args) : fn;
 }
+
+export function debounce(fn, ms) {
+    let timer;
+    return function debounced(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.call(this, ...args), ms);
+    }
+}

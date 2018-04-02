@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import cc from '../react-classcat'
-import {call, getValue, isFunction} from '../util';
+import {call, debounce, getValue, isFunction} from '../util';
 
 export default class DataTable extends React.PureComponent {
     
@@ -14,10 +14,22 @@ export default class DataTable extends React.PureComponent {
         error: null,
         recordsTotal: null,
         recordsFiltered: null,
+        search: {
+            value: '',
+            regex: false,
+        }
     }
     
-    async componentDidMount() {
-        // this.setState({loading: true})
+    constructor(props) {
+        super(props);
+        this._refresh = debounce(this._refreshNow, this.props.searchDelay);
+    }
+    
+    componentDidMount() {
+        this._refreshNow();
+    }
+    
+    async _refreshNow() {
         if(isFunction(this.props.data)) {
             this.setState({loading: true})
             // https://datatables.net/manual/server-side
@@ -25,23 +37,21 @@ export default class DataTable extends React.PureComponent {
                 draw: ++this.draw,
                 start: this.state.start,
                 length: this.state.length,
-                search: {
-                    value: '',
-                    regex: false,
-                },
+                search: this.state.search,
                 order: [],
                 columns: this.props.columns,
             })
             if(resp.draw < this.draw) return;
+            const data = resp.data.slice(0, this.state.length);
             this.setState({
-                data: resp.data,
+                data,
                 loading: false,
                 recordsTotal: resp.recordsTotal,
                 recordsFiltered: resp.recordsFiltered,
                 error: resp.error,
             })
         } else if(Array.isArray(this.props.data)) {
-            let data = this.props.data.slice(this.state.start,this.state.length)
+            const data = this.props.data.slice(this.state.start,this.state.length);
             this.setState({
                 data,
                 recordsTotal: this.props.data.length,
@@ -60,9 +70,18 @@ export default class DataTable extends React.PureComponent {
         })
     }
     
+    changeSearch = ev => {
+        this.setState({
+            search: {
+                value: ev.target.value,
+                regex: false,
+            }
+        }, this._refresh);
+    }
+    
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
-        const {data,loading,recordsFiltered,recordsTotal,start,length} = this.state;
+        const {data,loading,recordsFiltered,recordsTotal,start,length,search} = this.state;
         // console.log(data);
         return (
             <cc.div className={theme.wrapper}>
@@ -75,7 +94,7 @@ export default class DataTable extends React.PureComponent {
                         </select> entries</label>
                     </cc.div>
                     <cc.div className={theme.searchWrap}>
-                        <label><span>Search:</span><input type="search"/></label>
+                        <label><span>Search:</span><input type="search" value={search.value} onChange={this.changeSearch}/></label>
                     </cc.div>
                 </cc.div>
                 
@@ -149,7 +168,7 @@ export default class DataTable extends React.PureComponent {
                     <cc.div className={theme.pagination}>
                         <a href="" className={theme.button}>Previous</a>
                         {range(1,this.pageCount).map(pg => (
-                            <a href="" className={theme.button}>{pg}</a>
+                            <a key={pg} href="" className={theme.button}>{pg}</a>
                         ))}
                         <a href="" className={theme.button}>Next</a>
                     </cc.div>
@@ -194,6 +213,8 @@ DataTable.propTypes = {
     rowKey: PropTypes.func,
     columnKey: PropTypes.func,
     lengthMenu: PropTypes.arrayOf(PropTypes.number),
+    // https://datatables.net/reference/option/searchDelay
+    searchDelay: PropTypes.number,
 }
 
 DataTable.defaultProps = {
@@ -205,4 +226,5 @@ DataTable.defaultProps = {
         emptyTable: "No data available in table", 
     },
     lengthMenu: [ 10, 25, 50, 100 ],
+    searchDelay: 400,
 }
