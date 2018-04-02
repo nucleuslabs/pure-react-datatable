@@ -29,20 +29,21 @@ export default class DataTable extends React.PureComponent {
         this._refreshNow();
     }
     
-    async _refreshNow() {
+    async _refreshNow(state) {
+        state = {...this.state, ...state};
         if(isFunction(this.props.data)) {
             this.setState({loading: true})
             // https://datatables.net/manual/server-side
             let resp = await this.props.data({
                 draw: ++this.draw,
-                start: this.state.start,
-                length: this.state.length,
-                search: this.state.search,
+                start: state.start,
+                length: state.length,
+                search: state.search,
                 order: [],
                 columns: this.props.columns,
             })
             if(resp.draw < this.draw) return;
-            const data = resp.data.slice(0, this.state.length);
+            const data = resp.data.slice(0, state.length);
             this.setState({
                 data,
                 loading: false,
@@ -51,7 +52,7 @@ export default class DataTable extends React.PureComponent {
                 error: resp.error,
             })
         } else if(Array.isArray(this.props.data)) {
-            const data = this.props.data.slice(this.state.start,this.state.length);
+            const data = this.props.data.slice(state.start,state.length);
             this.setState({
                 data,
                 recordsTotal: this.props.data.length,
@@ -71,12 +72,14 @@ export default class DataTable extends React.PureComponent {
     }
     
     changeSearch = ev => {
-        this.setState({
+        const state = {
             search: {
                 value: ev.target.value,
                 regex: false,
             }
-        }, this._refresh);
+        }
+        this._refresh(state);
+        this.setState(state);
     }
     
     render() {
