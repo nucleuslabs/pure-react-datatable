@@ -192,14 +192,16 @@ export default class DataTable extends React.PureComponent {
                         )) : (
                             loading ? (
                                     <tr className={[theme.tr]}>
-                                        <td className={cc([theme.td,theme.loading])} colSpan={columns.length}>{language.loadingRecords}</td>
+                                        <td className={cc([theme.td,theme.loadingRecords,theme.empty])} colSpan={columns.length}>{language.loadingRecords}</td>
                                     </tr>
-                                ) : (
+                                ) : (recordsTotal > 0 ? (<tr className={[theme.tr]}>
+                                    <td className={cc([theme.td,theme.zeroRecords,theme.empty])} colSpan={columns.length}>{language.zeroRecords}</td>
+                                </tr>) : (
                                     <tr className={[theme.tr]}>
-                                        <td className={cc([theme.td,theme.empty])} colSpan={columns.length}>{language.emptyTable}</td>
+                                        <td className={cc([theme.td,theme.noData,theme.empty])} colSpan={columns.length}>{language.emptyTable}</td>
                                     </tr>
                                 )
-                        )}
+                        ))}
                     </tbody>
                 </table>
                 
