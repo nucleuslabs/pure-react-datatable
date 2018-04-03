@@ -45,7 +45,7 @@ const SAMPLE_DATA = [
 const config = {
     
     async data({draw,start,length,search,order,columns}) {
-        await sleep(500); // pretend we're waiting for the server :p
+        await sleep(750); // pretend we're waiting for the server :p
         return {
             draw,
             recordsTotal: SAMPLE_DATA.length,
@@ -92,7 +92,8 @@ const config = {
                 : <Icon className={css.inactive}><TimesCircle/></Icon>,
             className: css.center,
         },
-    ]
+    ],
+    lengthMenu: null,
 }
 
 const jobsTable = {
@@ -104,15 +105,17 @@ const jobsTable = {
         { title: "Office" },
         { title: "Extn." },
         { title: "Start date" },
-        { title: "Salary" }
-    ]
+        { title: "Salary", className: css.right }
+    ],
+    searchDelay: 16,
+    lengthMenu: [5,10,20,100],
 }
 
 function App() {
 
     return (
         <ErrorBoundary>
-            <DataTable theme={require('../styles/bridge')} {...jobsTable} searchDelay={16} lengthMenu={[5,10,20,100]} />
+            <DataTable theme={require('../styles/bridge')} {...jobsTable} />
             <br/>
             <DataTable theme={require('../styles/datatable.less')} {...config} />
         </ErrorBoundary>

@@ -10,7 +10,8 @@ export default class DataTable extends React.PureComponent {
     constructor(props) {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
-        this.state = defaults(this.props, 
+        this.state = defaults(
+            this.props, 
             {
                 start: 0,
                 length: 10,
@@ -18,17 +19,18 @@ export default class DataTable extends React.PureComponent {
                     value: '',
                     regex: false,
                 },
-            }, {
+            }, 
+            {
                 recordsTotal: null,
                 recordsFiltered: null,
                 data: [],
-                loading: false,
+                loading: true,
                 error: null,
             }
         );
     }
     
-    componentDidMount() {
+    componentWillMount() {
         this._refreshNow();
     }
     
@@ -84,12 +86,13 @@ export default class DataTable extends React.PureComponent {
                 data: filteredData.slice(state.start,state.start+state.length),
                 recordsTotal: this.props.data.length,
                 recordsFiltered: filteredData.length,
+                loading: false,
             })
         }
     }
     
     get pageCount() {
-        return this.state.recordsFiltered == null ? null : Math.ceil(this.state.recordsFiltered/this.state.length);
+        return this.state.recordsFiltered == null ? 0 : Math.ceil(this.state.recordsFiltered/this.state.length);
     }
     
     changeLength = ev => {
@@ -129,11 +132,12 @@ export default class DataTable extends React.PureComponent {
             <div className={cc(theme.wrapper)}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     <div className={cc(theme.lengthWrap)}>
-                        <label>Show <select value={length} onChange={this.changeLength}>
-                            {lengthMenu.map(len => (
-                                <option key={len} value={len}>{len}</option>
-                            ))}
-                        </select> entries</label>
+                        {language.lengthMenu && lengthMenu && lengthMenu.length ? <language.lengthMenu Menu={() => <select value={length} onChange={this.changeLength}>
+                                {lengthMenu.map(len => (
+                                    <option key={len} value={len}>{len}</option>
+                                ))}
+                            </select>}/>
+                        : null}
                     </div>
                     <div className={cc(theme.searchWrap)}>
                         <label><span>Search:</span><input type="search" value={search.value} onChange={this.changeSearch}/></label>
@@ -193,19 +197,17 @@ export default class DataTable extends React.PureComponent {
                 
                 <div className={cc([theme.controlBar,theme.infoBar])}>
                     <div className={cc(theme.pageInfo)}>
-                        Showing
-                        {start === 0 && length >= recordsFiltered 
-                            ? <Fragment> all </Fragment>
-                            : <Fragment> {start+1} to {Math.min(start+length,recordsFiltered)} of </Fragment>
+                        {recordsFiltered == null ? language.infoEmpty :
+                            <language.info start={start+1} end={start+data.length} total={recordsFiltered} max={recordsTotal} length={length}/>
                         }
-                        {recordsFiltered} entries
-                        {recordsFiltered < recordsTotal && <Fragment> (filtered from {recordsTotal} total entries)</Fragment>}
                     </div>
                     <div className={cc(theme.pagination)}>
                         <a href="" className={cc(theme.button)}>Previous</a>
-                        {range(1,this.pageCount).map(pg => (
-                            <a key={pg} href="" className={cc(theme.button)}>{pg}</a>
-                        ))}
+                        {recordsFiltered == null
+                            ? <span className={cc(theme.button)}>…</span>
+                            : (recordsFiltered ? range(1,this.pageCount).map(pg => (
+                                <a key={pg} href="" className={cc(theme.button)}>{pg}</a>
+                            )) : <span className={cc(theme.button)}>–</span>)}
                         <a href="" className={cc(theme.button)}>Next</a>
                     </div>
                 </div>
@@ -248,16 +250,33 @@ DataTable.propTypes = {
     lengthMenu: PropTypes.arrayOf(PropTypes.number),
     // https://datatables.net/reference/option/searchDelay
     searchDelay: PropTypes.number,
+    
+    // TODO: put page number and maybe search term in https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
+    // put length, sorting, and show/hide column preferences in localStorage.
+    // add reset button?
+    storageKey: PropTypes.string,
 }
 
 DataTable.defaultProps = {
     rowKey: (row,idx) => row._id || row.id || row._key || row.key || idx, 
     columnKey: (col,idx) => col._id || col.id || col._key || col.key || col.name || idx, 
     language: {
-        loadingRecords: "Loading...",
+        // https://datatables.net/reference/option/language
+        lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
+        info: ({start,end,total,max,length}) => <Fragment>
+            <Fragment>Showing </Fragment>
+            {start === 1 && length >= total
+                ? <Fragment>all</Fragment>
+                : <Fragment>{start} to {end} of</Fragment>
+            }
+            <Fragment> {total} entries</Fragment>
+            {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
+        </Fragment>,
+        infoEmpty: "Showing … to … of … entries",
+        loadingRecords: "Loading…",
         zeroRecords: "No matching records found",
         emptyTable: "No data available in table", 
     },
-    lengthMenu: [ 10, 25, 50, 100 ],
+    lengthMenu: [10, 25, 50, 100],
     searchDelay: 400,
 }

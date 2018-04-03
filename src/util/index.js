@@ -64,6 +64,22 @@ export function mergeState(newState) {
 }
 
 export function range(start,end,step=1) {
+    if(step === 0) {
+        throw new Error("`step` cannot be 0");
+    }
+    if(end === undefined) {
+        end = start - 1;
+        start = 0;
+    }
+    if(step > 0) {
+        if(end < start) {
+            throw new Error("`end` cannot be less than `start` when `step` > 0")
+        }
+    } else {
+        if(start < end) {
+            throw new Error("`start` cannot be less than `end` when `step` < 0")
+        }
+    }
     const length = Math.floor((end-start)/step+1);
     return Array.from({length}, (_,i) => i*step+start);
 }
