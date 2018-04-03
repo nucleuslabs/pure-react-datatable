@@ -124,6 +124,18 @@ export default class DataTable extends React.PureComponent {
         }
     }
     
+    _lengthMenu = () => (
+        <select value={this.state.length} onChange={this.changeLength} className={this.props.theme.lengthMenu}>
+            {this.props.lengthMenu.map(len => (
+                <option key={len} value={len}>{len}</option>
+            ))}
+        </select>
+    )
+    
+    _searchInput = () => (
+        <input type="search" value={this.state.search.value} onChange={this.changeSearch} className={this.props.theme.searchInput}/>
+    )
+    
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
         const {data,loading,recordsFiltered,recordsTotal,start,length,search} = this.state;
@@ -132,15 +144,11 @@ export default class DataTable extends React.PureComponent {
             <div className={cc(theme.wrapper)}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     <div className={cc(theme.lengthWrap)}>
-                        {language.lengthMenu && lengthMenu && lengthMenu.length ? <language.lengthMenu Menu={() => <select value={length} onChange={this.changeLength}>
-                                {lengthMenu.map(len => (
-                                    <option key={len} value={len}>{len}</option>
-                                ))}
-                            </select>}/>
+                        {language.lengthMenu && lengthMenu && lengthMenu.length ? <language.lengthMenu Menu={this._lengthMenu}/>
                         : null}
                     </div>
                     <div className={cc(theme.searchWrap)}>
-                        <label><span>Search:</span><input type="search" value={search.value} onChange={this.changeSearch}/></label>
+                        {language.search ? <language.search Input={this._searchInput}/> : null}
                     </div>
                 </div>
                 
@@ -263,6 +271,7 @@ DataTable.defaultProps = {
     language: {
         // https://datatables.net/reference/option/language
         lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
+        search: ({Input}) => <label><span>Search:</span><Input/></label>,
         info: ({start,end,total,max,length}) => <Fragment>
             <Fragment>Showing </Fragment>
             {start === 1 && length >= total
