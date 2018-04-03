@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import cc from 'classcat';
-import {call, debounce, getValue, isFunction, defaults, mergeState, range} from '../util';
+import {call, debounce, getValue, isFunction, defaults, mergeState, range, render} from '../util';
 
 export default class DataTable extends React.PureComponent {
     
@@ -135,6 +135,18 @@ export default class DataTable extends React.PureComponent {
     _searchInput = () => (
         <input type="search" value={this.state.search.value} onChange={this.changeSearch} className={this.props.theme.searchInput}/>
     )
+
+    handlePageWheel = ev => {
+        ev.preventDefault();
+        let pages = wheelTicks(ev);
+        console.log(`navigate ${pages} pages`);
+    }
+
+    handleLengthWheel = ev => {
+        ev.preventDefault();
+        let ticks = wheelTicks(ev);
+        console.log(`length ${ticks}`);
+    }
     
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
@@ -143,12 +155,15 @@ export default class DataTable extends React.PureComponent {
         return (
             <div className={cc(theme.wrapper)}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
-                    <div className={cc(theme.lengthWrap)}>
-                        {language.lengthMenu && lengthMenu && lengthMenu.length ? <language.lengthMenu Menu={this._lengthMenu}/>
-                        : null}
+                    <div className={cc(theme.lengthWrap)} onWheel={this.handleLengthWheel}>
+                        {language.lengthMenu && lengthMenu && lengthMenu.length 
+                            ? render(language.lengthMenu, {Menu: this._lengthMenu})
+                            : null}
                     </div>
                     <div className={cc(theme.searchWrap)}>
-                        {language.search ? <language.search Input={this._searchInput}/> : null}
+                        {language.search 
+                            ? render(language.search, {Input: this._searchInput})
+                            : null}
                     </div>
                 </div>
                 
@@ -207,17 +222,28 @@ export default class DataTable extends React.PureComponent {
                 
                 <div className={cc([theme.controlBar,theme.infoBar])}>
                     <div className={cc(theme.pageInfo)}>
-                        {recordsFiltered == null ? language.infoEmpty :
-                            <language.info start={start+1} end={start+data.length} total={recordsFiltered} max={recordsTotal} length={length}/>
+                        {!recordsFiltered 
+                            ? (loading ? render(language.infoLoading) : render(language.infoEmpty)) 
+                            : render(language.info, {
+                                start: start+1,
+                                end: start+data.length,
+                                total: recordsFiltered,
+                                max: recordsTotal,
+                                length: length,
+                            })
                         }
                     </div>
-                    <div className={cc(theme.pagination)}>
+                    <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         <a href="" className={cc(theme.button)}>Previous</a>
-                        {recordsFiltered == null
-                            ? <span className={cc(theme.button)}>…</span>
-                            : (recordsFiltered ? range(1,this.pageCount).map(pg => (
+
+                        {!recordsFiltered
+                            ? (loading ? <span className={cc(theme.button)}>…</span> :
+                                <span className={cc(theme.button)}>–</span>)
+                            : range(1, this.pageCount).map(pg => (
                                 <a key={pg} href="" className={cc(theme.button)}>{pg}</a>
-                            )) : <span className={cc(theme.button)}>–</span>)}
+                            ))
+                        }
+                        
                         <a href="" className={cc(theme.button)}>Next</a>
                     </div>
                 </div>
@@ -283,11 +309,24 @@ DataTable.defaultProps = {
             <Fragment> {total} entries</Fragment>
             {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
         </Fragment>,
-        infoEmpty: "Showing … to … of … entries",
+        infoLoading: "Showing … to … of … entries",
+        infoEmpty: "Showing all 0 entries",
         loadingRecords: "Loading…",
         zeroRecords: "No matching records found",
         emptyTable: "No data available in table", 
     },
     lengthMenu: [10, 25, 50, 100],
     searchDelay: 400,
+}
+
+function wheelTicks(ev) {
+    switch(ev.deltaMode) {
+        case MouseEvent.DOM_DELTA_PIXEL:
+            return Math.ceil(ev.deltaY/53);
+        case MouseEvent.DOM_DELTA_LINE:
+            return Math.ceil(ev.deltaY/3);
+        case MouseEvent.DOM_DELTA_PAGE:
+            return Math.ceil(ev.deltaY);
+    }
+    return ev.deltaY < 0 ? -1 : 1;
 }

@@ -19,6 +19,7 @@ export function getValue(obj, path, def) {
 }
 
 export * from './types';
+export * from './react';
 
 export function call(fn, ...args) {
     return typeof fn === 'function' ? fn.call(this, ...args) : fn;
@@ -62,6 +63,7 @@ function deepMerge(a, b) {
 export function mergeState(newState) {
     return oldState => deepMerge(oldState,newState);
 }
+
 
 export function range(start,end,step=1) {
     if(step === 0) {
