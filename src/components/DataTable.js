@@ -99,21 +99,6 @@ export default class DataTable extends React.PureComponent {
         return this.state.recordsFiltered == null ? 0 : Math.ceil(this.state.recordsFiltered/this.state.length);
     }
     
-    changeLength = ev => {
-        this._refreshState({
-            length: parseInt(ev.target.value) || this.props.length
-        });
-    }
-    
-    changeSearch = ev => {
-        this._refreshState({
-            start: 0,
-            search: {
-                value: ev.target.value,
-            }
-        });
-    }
-    
     _getValue(row, colIdx, type) {
         // https://datatables.net/reference/option/columns.render
         // TODO: support `type` and orthogonal data https://datatables.net/examples/ajax/orthogonal-data.html
@@ -137,23 +122,33 @@ export default class DataTable extends React.PureComponent {
         <input type="search" value={this.state.search.value} onChange={this.changeSearch} className={this.props.theme.searchInput}/>
     )
 
-    handlePageWheel = ev => {
-        ev.preventDefault();
-        let pages = wheelTicks(ev);
-        console.log(`navigate ${pages} pages`);
+
+    changeLength = ev => {
+        this._setLength(parseInt(ev.target.value) || this.props.length)
     }
 
+    changeSearch = ev => {
+        this._refreshState({
+            start: 0,
+            search: {
+                value: ev.target.value,
+            }
+        });
+    }
+    
+    _setLength = length => {
+        let start = Math.floor(this.state.start/length)*length;
+        this._refreshState({length,start});
+    }
+    
     handleLengthWheel = ev => {
         ev.preventDefault();
         let ticks = wheelTicks(ev);
-        console.log(`length ${ticks}`);
-    }
-    
-    _incPage = amount => ev => {
-        ev.preventDefault();
-        this._refreshState(({start,length,recordsFiltered}) => ({
-            start: clamp(start+length*amount,0,recordsFiltered-1)
-        }));
+        let idx = this.props.lengthMenu.indexOf(this.state.length);
+        let next = idx + ticks;
+        if(next >= 0 && next < this.props.lengthMenu.length) {
+            this._setLength(this.props.lengthMenu[next])
+        }
     }
     
     _refreshState = partialState => {
@@ -162,11 +157,21 @@ export default class DataTable extends React.PureComponent {
         this.setState(makeState);
     }
 
+    handlePageWheel = ev => {
+        this._incPage(wheelTicks(ev))(ev);
+    }
+
+    _incPage = amount => ev => {
+        this._setPage(this.currentPage+amount)(ev);
+    }
+
     _setPage = pg => ev => {
         ev.preventDefault();
-        this._refreshState({
-            start: clamp(pg*this.state.length,0,this.state.recordsFiltered-1),
-        });
+        pg = clamp(pg, 0, this.pageCount - 1);
+        if(pg === this.currentPage) return;
+        this._refreshState(({length}) => ({
+            start: pg*length,
+        }));
     }
     
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling

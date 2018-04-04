@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import {hot} from 'react-hot-loader'
 import DataTable from './DataTable';
@@ -77,12 +77,8 @@ const config = {
             className: css.mono,
         },
         {
-            title: "DOB",
-            data: 'dob',
-        },
-        {
-            title: "Age",
-            data: 'age',
+            title: "DOB (Age)",
+            render: ({row}) => <Fragment>{row.dob} ({row.age})</Fragment>
         },
         {
             title: "Active",
@@ -118,8 +114,10 @@ function App() {
 
     return (
         <ErrorBoundary>
+            <h1>DataTable Examples</h1>
+            <h2>Local data, datatables.net CSS</h2>
             <DataTable theme={cssBridge} {...jobsTable} />
-            <br/>
+            <h2>Remote data, custom CSS</h2>
             <DataTable theme={cssCustom} {...config} />
         </ErrorBoundary>
     )
