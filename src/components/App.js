@@ -111,13 +111,16 @@ const jobsTable = {
     lengthMenu: [5,10,20,100],
 }
 
+import cssBridge from '../styles/bridge';
+import cssCustom from '../styles/datatable';
+
 function App() {
 
     return (
         <ErrorBoundary>
-            <DataTable theme={require('../styles/bridge')} {...jobsTable} />
+            <DataTable theme={cssBridge} {...jobsTable} />
             <br/>
-            <DataTable theme={require('../styles/datatable.less')} {...config} />
+            <DataTable theme={cssCustom} {...config} />
         </ErrorBoundary>
     )
 }

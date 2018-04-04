@@ -126,7 +126,7 @@ export default class DataTable extends React.PureComponent {
     }
     
     _lengthMenu = () => (
-        <select value={this.state.length} onChange={this.changeLength} className={this.props.theme.lengthMenu}>
+        <select value={this.state.length} onChange={this.changeLength} className={this.props.theme.lengthSelect}>
             {this.props.lengthMenu.map(len => (
                 <option key={len} value={len}>{len}</option>
             ))}
@@ -182,17 +182,20 @@ export default class DataTable extends React.PureComponent {
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     
                     {language.lengthMenu && lengthMenu && lengthMenu.length
-                        ? <div className={cc(theme.lengthWrap)} onWheel={this.handleLengthWheel}>
+                        ? <div className={cc([theme.length])} onWheel={this.handleLengthWheel}>
                                 {render(language.lengthMenu, {Menu: this._lengthMenu})}
                             </div> 
                         : null}
                         
-                    <div className={cc(theme.searchWrap)}>
+                    <div className={cc(theme.search)}>
                         {language.search 
                             ? render(language.search, {Input: this._searchInput})
                             : null}
                     </div>
                     
+                    {search.value ? <div className={cc(theme.searchText)}>
+                        Search results for “{search.value}”
+                    </div> : null}
                 </div>
                 
                 <table className={cc(theme.table)}>
@@ -261,6 +264,7 @@ export default class DataTable extends React.PureComponent {
                             })
                         }
                     </div> : null}
+                    
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
                             ? <span className={cc([theme.button,theme.disabled])}>Previous</span>
@@ -270,7 +274,7 @@ export default class DataTable extends React.PureComponent {
                         {!recordsFiltered
                             ? (loading ? <span className={cc(theme.button)}>…</span> :
                                 <span className={cc(theme.button)}>–</span>)
-                            : range(this.pageCount).map(pg => (
+                            : range(pageCount).map(pg => (
                                 pg === currentPage
                                     ? <span key={pg} className={cc([theme.button,theme.current])}>{pg+1}</span>
                                     : <a key={pg} href="" className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</a>
@@ -282,6 +286,8 @@ export default class DataTable extends React.PureComponent {
                             : <a href="" className={cc(theme.button)} onClick={this._incPage(1)}>Next</a>
                         }
                     </div>
+
+                    <span className={cc(theme.pageXofY)}>Page {currentPage+1}{pageCount ? <Fragment> of {pageCount}</Fragment>: null}</span>
                 </div>
             </div>
         )

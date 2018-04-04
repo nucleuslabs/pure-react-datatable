@@ -37,11 +37,15 @@
     margin-bottom: 2px;
 }
 
-.pagination {
+.pagination, .pagePrint {
     margin-left: auto;
 }
 
-.searchWrap {
+.searchText {
+    margin: 0 auto;
+}
+
+.search {
     margin-left: auto;
     
     input {
@@ -83,6 +87,18 @@
         color: #333333;
         border: 1px solid #979797;
         background: #fff linear-gradient(to bottom, white 0%, gainsboro 100%);
+    }
+}
+
+@media screen {
+    .pageXofY, .searchText, .printOnly {
+        display: none;
+    }
+}
+
+@media print {
+    .pagination, .search, .length, .screenOnly {
+        display: none;
     }
 }
 
