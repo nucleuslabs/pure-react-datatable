@@ -48,6 +48,9 @@ export function defaults(source, target, forced) {
 
 function deepMerge(a, b) {
     const out = {...a};
+    if(isFunction(b)) {
+        b = b(a);
+    }
     for(let k of Object.keys(b)) {
         if(isFunction(b[k])) {
             out[k] = b[k](a[k]);
@@ -84,4 +87,10 @@ export function range(start,end,step=1) {
     }
     const length = Math.floor((end-start)/step+1);
     return Array.from({length}, (_,i) => i*step+start);
+}
+
+export function clamp(nbr, min, max) {
+    if(nbr < min) return min;
+    if(nbr > max) return max;
+    return nbr;
 }

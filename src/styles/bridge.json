@@ -8,5 +8,7 @@
     "button": "paginate_button",
     "pageInfo": "dataTables_info",
     "searchWrap": "dataTables_filter",
-    "lengthWrap": "dataTables_length"
+    "lengthWrap": "dataTables_length",
+    "current": "current",
+    "disabled": "disabled"
 }

@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import cc from 'classcat';
-import {call, debounce, getValue, isFunction, defaults, mergeState, range, render} from '../util';
+import {call, debounce, getValue, isFunction, defaults, mergeState, range, render, clamp} from '../util';
 
 export default class DataTable extends React.PureComponent {
     
@@ -90,27 +90,28 @@ export default class DataTable extends React.PureComponent {
             })
         }
     }
+
+    get currentPage() {
+        return Math.floor(this.state.start/this.state.length);
+    }
     
     get pageCount() {
         return this.state.recordsFiltered == null ? 0 : Math.ceil(this.state.recordsFiltered/this.state.length);
     }
     
     changeLength = ev => {
-        const makeState = mergeState({
+        this._refreshState({
             length: parseInt(ev.target.value) || this.props.length
-        })
-        this._refresh(makeState(this.state));
-        this.setState(makeState)
+        });
     }
     
     changeSearch = ev => {
-        const makeState = mergeState({
+        this._refreshState({
+            start: 0,
             search: {
                 value: ev.target.value,
             }
-        })
-        this._refresh(makeState(this.state));
-        this.setState(makeState);
+        });
     }
     
     _getValue(row, colIdx, type) {
@@ -148,23 +149,50 @@ export default class DataTable extends React.PureComponent {
         console.log(`length ${ticks}`);
     }
     
+    _incPage = amount => ev => {
+        ev.preventDefault();
+        this._refreshState(({start,length,recordsFiltered}) => ({
+            start: clamp(start+length*amount,0,recordsFiltered-1)
+        }));
+    }
+    
+    _refreshState = partialState => {
+        const makeState = mergeState(partialState);
+        this._refreshNow(makeState(this.state));
+        this.setState(makeState);
+    }
+
+    _setPage = pg => ev => {
+        ev.preventDefault();
+        this._refreshState({
+            start: clamp(pg*this.state.length,0,this.state.recordsFiltered-1),
+        });
+    }
+    
+    // TODO: swipe right/left events?? assuming there's no horizontal scrolling
+    
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
         const {data,loading,recordsFiltered,recordsTotal,start,length,search} = this.state;
+        const {currentPage,pageCount} = this;
+        
         // console.log(data);
         return (
             <div className={cc(theme.wrapper)}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
-                    <div className={cc(theme.lengthWrap)} onWheel={this.handleLengthWheel}>
-                        {language.lengthMenu && lengthMenu && lengthMenu.length 
-                            ? render(language.lengthMenu, {Menu: this._lengthMenu})
-                            : null}
-                    </div>
+                    
+                    {language.lengthMenu && lengthMenu && lengthMenu.length
+                        ? <div className={cc(theme.lengthWrap)} onWheel={this.handleLengthWheel}>
+                                {render(language.lengthMenu, {Menu: this._lengthMenu})}
+                            </div> 
+                        : null}
+                        
                     <div className={cc(theme.searchWrap)}>
                         {language.search 
                             ? render(language.search, {Input: this._searchInput})
                             : null}
                     </div>
+                    
                 </div>
                 
                 <table className={cc(theme.table)}>
@@ -221,30 +249,38 @@ export default class DataTable extends React.PureComponent {
                 </table>
                 
                 <div className={cc([theme.controlBar,theme.infoBar])}>
-                    <div className={cc(theme.pageInfo)}>
+                    {language.info ? <div className={cc(theme.pageInfo)}>
                         {!recordsFiltered 
                             ? (loading ? render(language.infoLoading) : render(language.infoEmpty)) 
                             : render(language.info, {
                                 start: start+1,
-                                end: start+data.length,
+                                end: Math.min(start+data.length,recordsFiltered),
                                 total: recordsFiltered,
                                 max: recordsTotal,
                                 length: length,
                             })
                         }
-                    </div>
+                    </div> : null}
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
-                        <a href="" className={cc(theme.button)}>Previous</a>
-
+                        {currentPage <= 0
+                            ? <span className={cc([theme.button,theme.disabled])}>Previous</span>
+                            : <a href="" className={cc(theme.button)} onClick={this._incPage(-1)}>Previous</a>
+                        }
+                        
                         {!recordsFiltered
                             ? (loading ? <span className={cc(theme.button)}>…</span> :
                                 <span className={cc(theme.button)}>–</span>)
-                            : range(1, this.pageCount).map(pg => (
-                                <a key={pg} href="" className={cc(theme.button)}>{pg}</a>
+                            : range(this.pageCount).map(pg => (
+                                pg === currentPage
+                                    ? <span key={pg} className={cc([theme.button,theme.current])}>{pg+1}</span>
+                                    : <a key={pg} href="" className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</a>
                             ))
                         }
-                        
-                        <a href="" className={cc(theme.button)}>Next</a>
+
+                        {currentPage >= pageCount - 1
+                            ? <span className={cc([theme.button,theme.disabled])}>Next</span>
+                            : <a href="" className={cc(theme.button)} onClick={this._incPage(1)}>Next</a>
+                        }
                     </div>
                 </div>
             </div>
