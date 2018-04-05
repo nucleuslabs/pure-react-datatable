@@ -1,6 +1,7 @@
+import React from 'react';
 import css from '../styles/misc.less';
-import cc from '../react-classcat';
+import cc from 'classcat';
 
 export default function Icon({children,className}) {
-    return <cc.span className={[css.icon,className]}>{children}</cc.span>
+    return <span className={cc([css.icon,className])}>{children}</span>
 }

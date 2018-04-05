@@ -1,5 +1,5 @@
 import stringToPath from './stringToPath';
-import {isFunction, isObject} from './types';
+import {isFunction, isObject, isPlainObject} from './types';
 
 export function getValue(obj, path, def) {
     if(!obj) return def;
@@ -46,7 +46,7 @@ export function defaults(source, target, forced) {
     return Object.assign(target, forced);
 }
 
-function deepMerge(a, b) {
+export function deepMerge(a, b) {
     const out = {...a};
     if(isFunction(b)) {
         b = b(a);
@@ -54,7 +54,7 @@ function deepMerge(a, b) {
     for(let k of Object.keys(b)) {
         if(isFunction(b[k])) {
             out[k] = b[k](a[k]);
-        } else if(isObject(a[k]) && isObject(b[k])) {
+        } else if(isPlainObject(a[k]) && isPlainObject(b[k])) {
             out[k] = deepMerge(a[k],b[k]);
         } else {
             out[k] = b[k];
@@ -93,4 +93,22 @@ export function clamp(nbr, min, max) {
     if(nbr < min) return min;
     if(nbr > max) return max;
     return nbr;
+}
+
+/**
+ * Removes an index from an array without mutating the original array.
+ *
+ * @param {Array} array Array to remove value from
+ * @param {Number} index Index to remove
+ * @param {Number} count
+ * @param {Array} replaceWith
+ * @returns {Array} Array with `value` removed
+ */
+export function arraySplice(array, index, count=1, replaceWith=[]) {
+    if(index < array.length) {
+        let copy = [...array];
+        copy.splice(index, count, ...replaceWith);
+        return copy;
+    }
+    return array;
 }

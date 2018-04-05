@@ -4,24 +4,61 @@
     width: 100%;
 }
 
+.cell {
+   
+}
+
 .th {
     background-color: #F5F8FA;
     border-color: #B6C8DA;
     border-style: solid;
     border-width: 0 0 1px 0;
+    //position: relative;
+    //vertical-align: center;
+    padding: 0;
     
     + .th {
         border-left-width: 1px;
     }
 }
 
-.cell {
-    padding: 2px 5px;
+.title {
+    padding: 2px 3px 2px 5px;
+    //display: block;
+    color: rgb(51,51,51);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
 }
 
-.td + .td {
-    border-left: 1px solid rgba(182, 200, 218, 0.333);
+.titleText {
+    flex: 1;
 }
+
+.orderable .sortIcon {
+    color: #B1BAC0;    
+}
+
+.sortIcon {
+    //margin-left: auto;
+}
+
+.sortAsc {
+    
+}
+
+.sortDesc {
+    
+}
+
+.td {
+    padding: 2px 5px;
+    + .td {
+        border-left: 1px solid rgba(182, 200, 218, 0.333);
+    }
+}
+
 
 .controlBar {
     display: flex;

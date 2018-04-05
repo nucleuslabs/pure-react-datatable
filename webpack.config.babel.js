@@ -94,7 +94,7 @@ export default {
     resolve: {
         modules: ['node_modules'],
         // https://webpack.js.org/configuration/resolve/#resolve-extensions
-        extensions: ['.js','.json','.less'],
+        extensions: ['.js','.json','.less','.svg'],
     },
     devtool: 'cheap-module-source-map',
     plugins: [

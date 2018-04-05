@@ -1,4 +1,5 @@
-import css from './datatable.less';
+import theme from './datatable.less';
+import css from './misc.less';
 
 export default {
     wrapper: "dataTables_wrapper",
@@ -6,13 +7,17 @@ export default {
     odd: "odd",
     even: "even",
     empty: "dataTables_empty",
-    pagination: ["dataTables_paginate",css.screenOnly],
+    pagination: ["dataTables_paginate",theme.screenOnly],
     button: "paginate_button",
     pageInfo: "dataTables_info",
-    search: ["dataTables_filter",css.screenOnly],
-    length: ["dataTables_length",css.screenOnly],
+    search: ["dataTables_filter",theme.screenOnly],
+    length: ["dataTables_length",theme.screenOnly],
     current: "current",
     disabled: "disabled",
-    searchText: css.printOnly,
-    pageXofY: css.printOnly,
+    searchText: theme.printOnly,
+    pageXofY: theme.printOnly,
+    sortAsc: 'sorting_asc',
+    sortDesc: 'sorting_desc',
+    orderable: 'sorting',
+    sortIcon: css.displayNone,
 }

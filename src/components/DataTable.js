@@ -1,7 +1,26 @@
 import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import cc from 'classcat';
-import {call, debounce, getValue, isFunction, defaults, mergeState, range, render, clamp} from '../util';
+import {
+    call,
+    debounce,
+    getValue,
+    isFunction,
+    defaults,
+    mergeState,
+    range,
+    render,
+    clamp,
+    deepMerge,
+    arraySplice
+} from '../util';
+
+const ASC = 'asc';
+const DESC = 'desc';
+import SortIcon from '../icons/sort';
+import SortUp from '../icons/sort-up';
+import SortDown from '../icons/sort-down';
+import Icon from './Icon';
 
 export default class DataTable extends React.PureComponent {
     
@@ -11,7 +30,7 @@ export default class DataTable extends React.PureComponent {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
         this.state = defaults(
-            this.props, 
+            props, 
             {
                 start: 0,
                 length: 10,
@@ -19,6 +38,7 @@ export default class DataTable extends React.PureComponent {
                     value: '',
                     regex: false,
                 },
+                order: [[0,ASC]], // TODO: normalize order from props, including name->idx conversion
             }, 
             {
                 recordsTotal: null,
@@ -110,6 +130,11 @@ export default class DataTable extends React.PureComponent {
         }
     }
     
+    _isOrderable(n) {
+        const col = this.props.columns[n];
+        return col.orderable === undefined || col.orderable;
+    }
+    
     _lengthMenu = () => (
         <select value={this.state.length} onChange={this.changeLength} className={this.props.theme.lengthSelect}>
             {this.props.lengthMenu.map(len => (
@@ -152,9 +177,9 @@ export default class DataTable extends React.PureComponent {
     }
     
     _refreshState = partialState => {
-        const makeState = mergeState(partialState);
-        this._refreshNow(makeState(this.state));
-        this.setState(makeState);
+        const nextState = deepMerge(this.state, partialState);
+        this._refreshNow(nextState);
+        this.setState(nextState);
     }
 
     handlePageWheel = ev => {
@@ -173,13 +198,45 @@ export default class DataTable extends React.PureComponent {
             start: pg*length,
         }));
     }
+
+    _sortColumn = n => ev => {
+        ev.preventDefault();
+        if(!this._isOrderable(n)) return false;
+        if(n < 0 || n >= this.props.columns.length) return false;
+        const multiSort = ev.shiftKey || ev.ctrlKey;
+        if(multiSort) {
+            let idx = this.state.order.findIndex(o => o[0] === n);
+            if(idx < 0) {
+                this._refreshState({
+                    order: order => [...order, [n,ASC]]
+                })
+            } else {
+                this._refreshState({
+                    order: order => arraySplice(order,idx,1,order[idx][1] === ASC ? [[n,DESC]] : [])
+                })
+            }
+        } else {
+            let dir = this.state.order.length && this.state.order[0][0] === n && this.state.order[0][1] === ASC ? DESC : ASC;
+            this._refreshState({
+                order: [[n,dir]]
+            })
+        }
+    }
     
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
     
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
-        const {data,loading,recordsFiltered,recordsTotal,start,length,search} = this.state;
+        const {data,loading,recordsFiltered,recordsTotal,start,length,search,order} = this.state;
         const {currentPage,pageCount} = this;
+
+        const sortIdxMap = columns.map((col,n) => order.findIndex(o => o[0] === n));
+        const sortDirMap = sortIdxMap.map(idx => idx < 0 ? null : order[idx][1]);
+        // console.log(sortDirMap);
+        const sortClassMap = {
+            [ASC]: theme.sortAsc,
+            [DESC]: theme.sortDesc,
+        }
         
         // console.log(data);
         return (
@@ -206,9 +263,32 @@ export default class DataTable extends React.PureComponent {
                 <table className={cc(theme.table)}>
                     <thead className={cc(theme.thead)}>
                         <tr className={cc([theme.tr,theme.hrow])}>
-                            {columns.map((col,n) => (
-                                <th key={columnKey(col,n)} className={cc([theme.cell,theme.th,col.className])}>{call(col.title)}</th>
-                            ))}
+                            {columns.map((col,n) => {
+                                const title = call(col.title);
+                                const sortDir = sortDirMap[n];
+                                const orderable = this._isOrderable(n);
+                                let sortClass;
+                                if(sortDirMap[n]) {
+                                    sortClass = sortClassMap[sortDirMap[n]];
+                                } else if(orderable) {
+                                    sortClass = theme.orderable;
+                                }
+                                
+                       
+                                // let sortDir = orderIdx < 0 ? null : order[orderIdx][1];
+                                // console.log(orderIdx);
+                                return (
+                                    <th key={columnKey(col, n)} className={cc([theme.cell, theme.th, col.className, sortClass])}>
+                                        {this._isOrderable(n)
+                                            ? <a href="" onClick={this._sortColumn(n)} className={cc(theme.title)}>
+                                                <span className={cc(theme.titleText)}>{title}</span>
+                                                <Icon className={theme.sortIcon}>{!sortDir ? <SortIcon/> : (sortDir === ASC ? <SortUp/> : <SortDown/>)}</Icon>
+                                            </a>
+                                            : <span className={cc([theme.title,theme.titleText])}>{title}</span>
+                                        }
+                                    </th>
+                                )
+                            })}
                         </tr>
                     </thead>
                     <tbody>
