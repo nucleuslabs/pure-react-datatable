@@ -14,13 +14,14 @@ import {
     deepMerge,
     arraySplice
 } from '../util';
-
-const ASC = 'asc';
-const DESC = 'desc';
 import SortIcon from '../icons/sort';
 import SortUp from '../icons/sort-up';
 import SortDown from '../icons/sort-down';
 import Icon from './Icon';
+import ActionLink from './ActionLink';
+
+const ASC = 'asc';
+const DESC = 'desc';
 
 export default class DataTable extends React.PureComponent {
     
@@ -54,8 +55,11 @@ export default class DataTable extends React.PureComponent {
         this._refreshNow();
     }
     
-    async _refreshNow(state) {
-        state = {...this.state, ...state};
+    async _refreshNow(partialState) {
+        let state = this.state;
+        if(partialState) {
+            state = deepMerge(state, partialState);
+        }
         if(isFunction(this.props.data)) {
             this.setState({loading: true})
             // https://datatables.net/manual/server-side
@@ -100,7 +104,6 @@ export default class DataTable extends React.PureComponent {
                         })
                     });
                 }
-           
             }
             this.setState({
                 data: filteredData.slice(state.start,state.start+state.length),
@@ -175,14 +178,14 @@ export default class DataTable extends React.PureComponent {
             this._setLength(this.props.lengthMenu[next])
         }
     }
-    
+
     _refreshState = partialState => {
-        const nextState = deepMerge(this.state, partialState);
-        this._refreshNow(nextState);
-        this.setState(nextState);
+        this._refreshNow(partialState);
+        this.setState(mergeState(partialState));
     }
 
     handlePageWheel = ev => {
+        ev.preventDefault();
         this._incPage(wheelTicks(ev))(ev);
     }
 
@@ -191,7 +194,7 @@ export default class DataTable extends React.PureComponent {
     }
 
     _setPage = pg => ev => {
-        ev.preventDefault();
+        // ev.preventDefault();
         pg = clamp(pg, 0, this.pageCount - 1);
         if(pg === this.currentPage) return;
         this._refreshState(({length}) => ({
@@ -200,7 +203,7 @@ export default class DataTable extends React.PureComponent {
     }
 
     _sortColumn = n => ev => {
-        ev.preventDefault();
+        // ev.preventDefault();
         if(!this._isOrderable(n)) return false;
         if(n < 0 || n >= this.props.columns.length) return false;
         const multiSort = ev.shiftKey || ev.ctrlKey;
@@ -260,32 +263,41 @@ export default class DataTable extends React.PureComponent {
                     </div> : null}
                 </div>
                 
-                <table className={cc(theme.table)}>
+                <table role="grid" className={cc(theme.table)}>
                     <thead className={cc(theme.thead)}>
-                        <tr className={cc([theme.tr,theme.hrow])}>
+                        <tr role="row" className={cc([theme.tr,theme.hrow])}>
                             {columns.map((col,n) => {
-                                const title = call(col.title);
+                                let title = <span className={cc(theme.title)}>{call(col.title)}</span>;
                                 const sortDir = sortDirMap[n];
-                                const orderable = this._isOrderable(n);
+                                const orderable = !!this._isOrderable(n);
                                 let sortClass;
                                 if(sortDirMap[n]) {
-                                    sortClass = sortClassMap[sortDirMap[n]];
+                                    sortClass = [theme.sorted,sortClassMap[sortDirMap[n]]];
                                 } else if(orderable) {
-                                    sortClass = theme.orderable;
+                                    sortClass = theme.unsorted;
+                                }
+                                if(orderable) {
+                                    title = (
+                                        <ActionLink className={cc(theme.titleWrap)} onClick={this._sortColumn(n)}>
+                                            {title}
+                                            {orderable && <Icon className={theme.sortIcon}>{!sortDir ? <SortIcon/> : (sortDir === ASC ? <SortUp/> : <SortDown/>)}</Icon>}
+                                        </ActionLink>
+                                    )
+                                    
+                                } else {
+                                    title = (
+                                        <span className={cc(theme.titleWrap)}>
+                                            {title}
+                                        </span>
+                                    )
                                 }
                                 
                        
                                 // let sortDir = orderIdx < 0 ? null : order[orderIdx][1];
                                 // console.log(orderIdx);
                                 return (
-                                    <th key={columnKey(col, n)} className={cc([theme.cell, theme.th, col.className, sortClass])}>
-                                        {this._isOrderable(n)
-                                            ? <a href="" onClick={this._sortColumn(n)} className={cc(theme.title)}>
-                                                <span className={cc(theme.titleText)}>{title}</span>
-                                                <Icon className={theme.sortIcon}>{!sortDir ? <SortIcon/> : (sortDir === ASC ? <SortUp/> : <SortDown/>)}</Icon>
-                                            </a>
-                                            : <span className={cc([theme.title,theme.titleText])}>{title}</span>
-                                        }
+                                    <th key={columnKey(col, n)} className={cc([theme.cell, theme.th, col.className, orderable ? theme.orderable : theme.unorderable,  sortClass])} scope="col" role="columnheader" aria-sort={sortDirMap[n] ? (sortDirMap[n] === ASC ? 'ascending' : 'descending') : 'none'}>
+                                        {title}
                                     </th>
                                 )
                             })}
@@ -293,7 +305,7 @@ export default class DataTable extends React.PureComponent {
                     </thead>
                     <tbody>
                         {data.length ? data.map((row,m) => (
-                            <tr key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
+                            <tr role="row" key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
                                 {columns.map((col,n) => {
                                     
                                     // https://datatables.net/reference/option/columns.render
@@ -304,10 +316,11 @@ export default class DataTable extends React.PureComponent {
                                     // if(Array.isArray(row)) {
                                     //     value 
                                     // }
-                                    let data = this._getValue(row, n, 'display');
+                                    let value = this._getValue(row, n, 'display');
+                                    let cell;
                                     if(col.render) {
-                                        data = React.createElement(col.render, {
-                                            data: data,
+                                        cell = render(col.render, {
+                                            data: value,
                                             type: 'display',
                                             row,
                                             meta: {
@@ -315,9 +328,10 @@ export default class DataTable extends React.PureComponent {
                                                 col: n,
                                             }
                                         })
+                                    } else {
+                                        cell = value;
                                     }
-                                    
-                                    return <td key={columnKey(col,n)} className={cc([theme.cell,theme.td,col.className])}>{data}</td>
+                                    return <td key={columnKey(col,n)} className={cc([theme.cell,theme.td,col.className,sortDirMap[n] ? [sortClassMap[sortDirMap[n]],theme.sorted,theme[`sort${sortIdxMap[n]+1}`]] : theme.unsorted])}>{cell}</td>
                                 })}
                             </tr>
                         )) : (
@@ -353,7 +367,7 @@ export default class DataTable extends React.PureComponent {
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
                             ? <span className={cc([theme.button,theme.disabled])}>Previous</span>
-                            : <a href="" className={cc(theme.button)} onClick={this._incPage(-1)}>Previous</a>
+                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(-1)}>Previous</ActionLink>
                         }
                         
                         {!recordsFiltered
@@ -362,13 +376,13 @@ export default class DataTable extends React.PureComponent {
                             : range(pageCount).map(pg => (
                                 pg === currentPage
                                     ? <span key={pg} className={cc([theme.button,theme.current])}>{pg+1}</span>
-                                    : <a key={pg} href="" className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</a>
+                                    : <ActionLink key={pg} className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</ActionLink>
                             ))
                         }
 
                         {currentPage >= pageCount - 1
                             ? <span className={cc([theme.button,theme.disabled])}>Next</span>
-                            : <a href="" className={cc(theme.button)} onClick={this._incPage(1)}>Next</a>
+                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(1)}>Next</ActionLink>
                         }
                     </div>
 

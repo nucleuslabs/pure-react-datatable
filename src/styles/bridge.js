@@ -20,4 +20,10 @@ export default {
     sortDesc: 'sorting_desc',
     orderable: 'sorting',
     sortIcon: css.displayNone,
+    sort1: 'sorting_1',
+    sort2: 'sorting_2',
+    sort3: 'sorting_3',
+    sort4: 'sorting_3', // datatables.net stops at 3
+    sort5: 'sorting_3',
+    sort6: 'sorting_3',
 }

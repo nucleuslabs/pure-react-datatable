@@ -56,7 +56,7 @@ const config = {
     
     columns: [
         {
-            title: <Icon><StarEmpty/></Icon>,
+            title: <Icon><StarEmpty title="Star"/></Icon>,
             data: 'starred',
             render: ({data}) => data
                 ? <Icon className={css.star}><StarFull/></Icon>
