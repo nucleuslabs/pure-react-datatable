@@ -23,7 +23,7 @@ import ActionLink from './ActionLink';
 const ASC = 'asc';
 const DESC = 'desc';
 
-export default class DataTable extends React.PureComponent {
+export default class DataTable extends React.Component {
     
     draw = 0;
     
@@ -50,8 +50,8 @@ export default class DataTable extends React.PureComponent {
             }
         );
     }
-    
-    componentWillMount() {
+
+    componentDidMount() {
         this._refreshNow();
     }
     
@@ -112,6 +112,22 @@ export default class DataTable extends React.PureComponent {
                 loading: false,
             })
         }
+    }
+    
+    static async getDerivedStateFromProps(nextProps, prevState) {
+        const data = await nextProps.data; // fixme: i don't think we're allowed to await.
+        if(Array.isArray(data)) {
+            if(!nextProps.data.length) {
+                return {normData: []};
+            }
+            // const cols = Object.keys(nextProps.data[0]);
+            const cols = nextProps.columns.map((c,i) => c.data === undefined ? i : data).filter(x => x !== null);
+            const normData = data.map(row => {
+                return cols.map(c => row[c].toLocaleLowerCase())
+            })
+            return {normData};
+        }
+        return null;
     }
 
     get currentPage() {

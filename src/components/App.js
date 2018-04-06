@@ -70,6 +70,7 @@ const config = {
         {
             title: "First Name",
             data: 'firstName',
+            orderable: false,
         },
         {
             title: "File #",
@@ -99,7 +100,7 @@ const jobsTable = {
         { title: "Name" },
         { title: "Position" },
         { title: "Office" },
-        { title: "Extn." },
+        { title: "Extn.", orderable: false },
         { title: "Start date" },
         { title: "Salary", className: css.right }
     ],
