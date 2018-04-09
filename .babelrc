@@ -5,8 +5,7 @@
         "transform-react-jsx",
         "transform-react-display-name",
         "transform-class-properties",
-        "transform-function-bind",
-        "transform-decorators-legacy"
+        "transform-function-bind"
     ],
     "compact": false,
     "env": {
@@ -45,6 +44,11 @@
                         "modules": "commonjs"
                     }
                 ]
+            ]
+        },
+        "production": {
+            "plugins": [
+                "babel-plugin-external-helpers"
             ]
         }
     }

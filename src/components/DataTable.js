@@ -12,7 +12,7 @@ import {
     render,
     clamp,
     deepMerge,
-    arraySplice
+    arraySplice, pick
 } from '../util';
 import SortIcon from '../icons/sort';
 import SortUp from '../icons/sort-up';
@@ -68,8 +68,17 @@ export default class DataTable extends React.Component {
                 start: state.start,
                 length: state.length,
                 search: state.search,
-                order: [],
-                columns: this.props.columns,
+                order: state.order.map(([column,dir]) => ({column,dir})),
+                columns: this.props.columns.map(c => pick(c,{
+                    data: undefined,
+                    name: undefined,
+                    orderable: true,
+                    search: {
+                        value: '',
+                        regex: false,
+                    },
+                    searchable: true,
+                })),
             })
             if(resp.draw < this.draw) return;
             // TODO: if resp.data.length === resp.recordsTotal, switch to client-side filtering??
@@ -114,21 +123,21 @@ export default class DataTable extends React.Component {
         }
     }
     
-    static async getDerivedStateFromProps(nextProps, prevState) {
-        const data = await nextProps.data; // fixme: i don't think we're allowed to await.
-        if(Array.isArray(data)) {
-            if(!nextProps.data.length) {
-                return {normData: []};
-            }
-            // const cols = Object.keys(nextProps.data[0]);
-            const cols = nextProps.columns.map((c,i) => c.data === undefined ? i : data).filter(x => x !== null);
-            const normData = data.map(row => {
-                return cols.map(c => row[c].toLocaleLowerCase())
-            })
-            return {normData};
-        }
-        return null;
-    }
+    // static async getDerivedStateFromProps(nextProps, prevState) {
+    //     const data = await nextProps.data; // fixme: i don't think we're allowed to await.
+    //     if(Array.isArray(data)) {
+    //         if(!nextProps.data.length) {
+    //             return {normData: []};
+    //         }
+    //         // const cols = Object.keys(nextProps.data[0]);
+    //         const cols = nextProps.columns.map((c,i) => c.data === undefined ? i : data).filter(x => x !== null);
+    //         const normData = data.map(row => {
+    //             return cols.map(c => row[c].toLocaleLowerCase())
+    //         })
+    //         return {normData};
+    //     }
+    //     return null;
+    // }
 
     get currentPage() {
         return Math.floor(this.state.start/this.state.length);

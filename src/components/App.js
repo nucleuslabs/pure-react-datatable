@@ -46,6 +46,7 @@ const config = {
     
     async data({draw,start,length,search,order,columns}) {
         await sleep(750); // pretend we're waiting for the server :p
+        // console.log(draw,start,length,search,order,columns);
         return {
             draw,
             recordsTotal: SAMPLE_DATA.length,

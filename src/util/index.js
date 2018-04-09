@@ -112,3 +112,23 @@ export function arraySplice(array, index, count=1, replaceWith=[]) {
     }
     return array;
 }
+
+export function pick(obj, keys) {
+    const out = Object.create(null);
+    if(Array.isArray(keys)) {
+        for(let k of keys) {
+            if(Object.hasOwnProperty.call(obj, k)) {
+                out[k] = obj[k];
+            }
+        }
+    } else {
+        for(let k of Object.keys(keys)) {
+            if(obj[k] === undefined) {
+                out[k] = keys[k];
+            } else {
+                out[k] = obj[k];
+            }
+        }
+    }
+    return out;
+}
