@@ -6,9 +6,15 @@ import StarEmpty from '../icons/star-empty.svg';
 import StarFull from '../icons/star-solid.svg';
 import CheckCircle from '../icons/check-circle.svg';
 import TimesCircle from '../icons/times-circle.svg';
-import Icon from './Icon';
 import css from '../styles/misc.less';
 import JOBS from '../data/jobs';
+import SortIcon from '../icons/sort';
+import SortUp from '../icons/sort-up';
+import SortDown from '../icons/sort-down';
+import Icon from './Icon';
+
+import cssBridge from '../styles/bridge';
+import cssCustom from '../styles/datatable';
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
@@ -92,6 +98,13 @@ const config = {
         },
     ],
     lengthMenu: null,
+    language: {
+        sortIcons: {
+            ascending: <Icon className={cssCustom.sortIcon}><SortUp/></Icon>,
+            descending: <Icon className={cssCustom.sortIcon}><SortDown/></Icon>,
+            unsorted: <Icon className={cssCustom.sortIcon}><SortIcon/></Icon>,
+        }
+    }
 }
 
 const jobsTable = {
@@ -107,10 +120,9 @@ const jobsTable = {
     ],
     searchDelay: 16,
     lengthMenu: [5,10,20,100],
+
 }
 
-import cssBridge from '../styles/bridge';
-import cssCustom from '../styles/datatable';
 
 function App() {
 

@@ -33,17 +33,19 @@ export function debounce(fn, ms) {
     }
 }
 
-export function defaults(source, target, forced) {
-    for(let key of Object.keys(target)) {
-        if(source[key] !== undefined) {
-            if(isObject(source[key])) {
-                target[key] = defaults(source[key], target[key]);
+export const __map = {};
+
+export function defaultsDeep(options, defaults) {
+    for(let key of Object.keys(defaults)) {
+        if(options[key] !== undefined) {
+            if(isPlainObject(options[key]) && isPlainObject(defaults[key]) && defaults[key] !== __map) {
+                defaults[key] = defaultsDeep(options[key], defaults[key]);
             } else {
-                target[key] = source[key];
+                defaults[key] = options[key];
             }
         }
     }
-    return Object.assign(target, forced);
+    return defaults;
 }
 
 export function deepMerge(a, b) {

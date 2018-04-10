@@ -6,49 +6,46 @@ import {
     debounce,
     getValue,
     isFunction,
-    defaults,
+    defaultsDeep,
     mergeState,
     range,
     render,
     clamp,
     deepMerge,
-    arraySplice, pick
+    arraySplice, pick, __map
 } from '../util';
-import SortIcon from '../icons/sort';
-import SortUp from '../icons/sort-up';
-import SortDown from '../icons/sort-down';
-import Icon from './Icon';
+
 import ActionLink from './ActionLink';
 
 const ASC = 'asc';
 const DESC = 'desc';
 
-export default class DataTable extends React.Component {
+class DataTable extends React.Component {
     
     draw = 0;
-    
+   
     constructor(props) {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
-        this.state = defaults(
-            props, 
-            {
-                start: 0,
-                length: 10,
-                search: {
-                    value: '',
-                    regex: false,
+        this.state = {
+            ...defaultsDeep(
+                props,
+                {
+                    start: 0,
+                    length: props.lengthMenu && props.lengthMenu.length ? props.lengthMenu[0] : 10,
+                    search: {
+                        value: '',
+                        regex: false,
+                    },
+                    order: [[0, ASC]], // TODO: normalize order from props, including name->idx conversion
                 },
-                order: [[0,ASC]], // TODO: normalize order from props, including name->idx conversion
-            }, 
-            {
-                recordsTotal: null,
-                recordsFiltered: null,
-                data: [],
-                loading: true,
-                error: null,
-            }
-        );
+            ),
+            recordsTotal: null,
+            recordsFiltered: null,
+            data: [],
+            loading: true,
+            error: null,
+        }
     }
 
     componentDidMount() {
@@ -254,7 +251,7 @@ export default class DataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
     
     render() {
-        const {theme,columns,language,columnKey,rowKey,lengthMenu} = this.props;
+        const {theme,columns,language,columnKey,rowKey,lengthMenu,className} = this.props;
         const {data,loading,recordsFiltered,recordsTotal,start,length,search,order} = this.state;
         const {currentPage,pageCount} = this;
 
@@ -266,9 +263,8 @@ export default class DataTable extends React.Component {
             [DESC]: theme.sortDesc,
         }
         
-        // console.log(data);
         return (
-            <div className={cc(theme.wrapper)}>
+            <div className={cc([theme.wrapper,className])}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     
                     {language.lengthMenu && lengthMenu && lengthMenu.length
@@ -305,10 +301,9 @@ export default class DataTable extends React.Component {
                                     title = (
                                         <ActionLink className={cc(theme.titleWrap)} onClick={this._sortColumn(n)}>
                                             {title}
-                                            {orderable && <Icon className={theme.sortIcon}>{!sortDir ? <SortIcon/> : (sortDir === ASC ? <SortUp/> : <SortDown/>)}</Icon>}
+                                            {orderable && language.sortIcons ? (!sortDir ? language.sortIcons.unsorted : (sortDir === ASC ? language.sortIcons.ascending : language.sortIcons.descending)) : null}
                                         </ActionLink>
                                     )
-                                    
                                 } else {
                                     title = (
                                         <span className={cc(theme.titleWrap)}>
@@ -317,11 +312,19 @@ export default class DataTable extends React.Component {
                                     )
                                 }
                                 
-                       
+                                const {width,minWidth,maxWidth} = col;
+                                
                                 // let sortDir = orderIdx < 0 ? null : order[orderIdx][1];
                                 // console.log(orderIdx);
                                 return (
-                                    <th key={columnKey(col, n)} className={cc([theme.cell, theme.th, col.className, orderable ? theme.orderable : theme.unorderable,  sortClass])} scope="col" role="columnheader" aria-sort={sortDirMap[n] ? (sortDirMap[n] === ASC ? 'ascending' : 'descending') : 'none'}>
+                                    <th 
+                                        key={columnKey(col, n)} 
+                                        className={cc([theme.cell, theme.th, col.className, orderable ? theme.orderable : theme.unorderable,  sortClass])} 
+                                        scope="col" 
+                                        role="columnheader" 
+                                        aria-sort={sortDirMap[n] ? (sortDirMap[n] === ASC ? 'ascending' : 'descending') : 'none'}
+                                        style={{width,minWidth,maxWidth}}
+                                    >
                                         {title}
                                     </th>
                                 )
@@ -420,6 +423,8 @@ export default class DataTable extends React.Component {
 
 
 
+const funcOrNode = PropTypes.oneOfType([PropTypes.func,PropTypes.node])
+
 DataTable.propTypes = {
     theme: PropTypes.object,
     data: PropTypes.oneOfType([PropTypes.func,PropTypes.array]),
@@ -438,13 +443,24 @@ DataTable.propTypes = {
         })
     ])),
     language: PropTypes.shape({
-        loadingRecords: PropTypes.node,
+        lengthMenu: funcOrNode,
+        search: funcOrNode,
+        info: funcOrNode,
+        infoLoading: funcOrNode,
+        infoEmpty: funcOrNode,
+        loadingRecords: funcOrNode,
         
         // Text shown inside the table records when the is no information to be displayed after filtering.
-        zeroRecords: PropTypes.node,
+        zeroRecords: funcOrNode,
 
         // This string is shown in preference to language.zeroRecords when the table is empty of data (regardless of filtering) - i.e. there are zero records in the table.
-        emptyTable: PropTypes.node,
+        emptyTable: funcOrNode,
+
+        sortIcons: PropTypes.shape({
+            ascending: funcOrNode,
+            descending: funcOrNode,
+            unsorted: funcOrNode,
+        })
     }),
     // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
     rowKey: PropTypes.func,
@@ -459,30 +475,39 @@ DataTable.propTypes = {
     storageKey: PropTypes.string,
 }
 
-DataTable.defaultProps = {
-    rowKey: (row,idx) => row._id || row.id || row._key || row.key || idx, 
-    columnKey: (col,idx) => col._id || col.id || col._key || col.key || col.name || idx, 
-    language: {
-        // https://datatables.net/reference/option/language
-        lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
-        search: ({Input}) => <label><span>Search:</span><Input/></label>,
-        info: ({start,end,total,max,length}) => <Fragment>
-            <Fragment>Showing </Fragment>
-            {start === 1 && length >= total
-                ? <Fragment>all</Fragment>
-                : <Fragment>{start} to {end} of</Fragment>
-            }
-            <Fragment> {total} entries</Fragment>
-            {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
-        </Fragment>,
-        infoLoading: "Showing … to … of … entries",
-        infoEmpty: "Showing all 0 entries",
-        loadingRecords: "Loading…",
-        zeroRecords: "No matching records found",
-        emptyTable: "No data available in table", 
-    },
-    lengthMenu: [10, 25, 50, 100],
-    searchDelay: 400,
+export default function DataTable_Defaults(props) {
+    const options = defaultsDeep(props, {
+        className: undefined,
+        theme: __map,
+        data: [],
+        rowKey: (row,idx) => row._id || row.id || row._key || row.key || idx,
+        columnKey: (col,idx) => col._id || col.id || col._key || col.key || col.name || idx,
+        language: {
+            // https://datatables.net/reference/option/language
+            lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
+            search: ({Input}) => <label><span>Search:</span><Input/></label>,
+            info: ({start,end,total,max,length}) => <Fragment>
+                <Fragment>Showing </Fragment>
+                {start === 1 && length >= total
+                    ? <Fragment>all</Fragment>
+                    : <Fragment>{start} to {end} of</Fragment>
+                }
+                <Fragment> {total} entries</Fragment>
+                {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
+            </Fragment>,
+            infoLoading: "Showing … to … of … entries",
+            infoEmpty: "Showing all 0 entries",
+            loadingRecords: "Loading…",
+            zeroRecords: "No matching records found",
+            emptyTable: "No data available in table",
+            sortIcons: null,
+        },
+        lengthMenu: [10, 25, 50, 100],
+        searchDelay: 400,
+        columns: [],
+    })
+  
+    return <DataTable {...options}/>
 }
 
 function wheelTicks(ev) {
