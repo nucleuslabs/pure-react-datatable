@@ -97,6 +97,7 @@ const config = {
             className: css.center,
         },
     ],
+    order: ['lastName','asc'],
     lengthMenu: null,
     language: {
         sortIcons: {

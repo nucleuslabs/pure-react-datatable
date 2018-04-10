@@ -12,7 +12,7 @@ import {
     render,
     clamp,
     deepMerge,
-    arraySplice, pick, __map
+    arraySplice, pick, __map, isString, isArray
 } from '../util';
 
 import ActionLink from './ActionLink';
@@ -20,7 +20,7 @@ import ActionLink from './ActionLink';
 const ASC = 'asc';
 const DESC = 'desc';
 
-class DataTable extends React.Component {
+class PureDataTable extends React.Component {
     
     draw = 0;
    
@@ -28,18 +28,7 @@ class DataTable extends React.Component {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
         this.state = {
-            ...defaultsDeep(
-                props,
-                {
-                    start: 0,
-                    length: props.lengthMenu && props.lengthMenu.length ? props.lengthMenu[0] : 10,
-                    search: {
-                        value: '',
-                        regex: false,
-                    },
-                    order: [[0, ASC]], // TODO: normalize order from props, including name->idx conversion
-                },
-            ),
+            ...pick(props,['start','length','search','order']),
             recordsTotal: null,
             recordsFiltered: null,
             data: [],
@@ -425,7 +414,7 @@ class DataTable extends React.Component {
 
 const funcOrNode = PropTypes.oneOfType([PropTypes.func,PropTypes.node])
 
-DataTable.propTypes = {
+PureDataTable.propTypes = {
     theme: PropTypes.object,
     data: PropTypes.oneOfType([PropTypes.func,PropTypes.array]),
     columns: PropTypes.arrayOf(PropTypes.oneOfType([
@@ -475,7 +464,7 @@ DataTable.propTypes = {
     storageKey: PropTypes.string,
 }
 
-export default function DataTable_Defaults(props) {
+export default function DataTable(props) {
     const options = defaultsDeep(props, {
         className: undefined,
         theme: __map,
@@ -505,10 +494,51 @@ export default function DataTable_Defaults(props) {
         lengthMenu: [10, 25, 50, 100],
         searchDelay: 400,
         columns: [],
-    })
-  
-    return <DataTable {...options}/>
+        start: 0,
+        length: props.lengthMenu && props.lengthMenu.length ? props.lengthMenu[0] : 10,
+        search: {
+            value: '',
+            regex: false,
+        },
+        order: [[0, ASC]],
+    });
+    
+    if(options.order.length) {
+        // https://datatables.net/reference/option/order
+        const orderMap = {};
+        for(let i = 0; i < options.columns.length; ++i) {
+            if(isString(options.columns[i].name)) {
+                orderMap[options.columns[i].name] = i;
+            } else if(isString(options.columns[i].data)) {
+                orderMap[options.columns[i].data] = i;
+            }
+        }
+        if(!Array.isArray(options.order[0])) {
+            options.order = [options.order];
+        }
+        options.order = options.order.map(([col,dir]) => {
+            if(isString(col)) {
+                col = orderMap[col];
+            }
+            return [col,String(dir).toLowerCase()];
+        });
+    }
+    return <PureDataTable {...options}/>
 }
+
+// function fixOrder(order, map) {
+//     if(!order) return;
+//     if(Array.isArray(order[0])) {
+//         for(let o of order) {
+//             fixOrder(o, map);
+//         }
+//     } else if(hasProp(map, order[0])) {
+//         order[0] = map[order[0]];
+//     } else if(typeof order[0] === 'string') {
+//         console.warn(`Column "${order[0]}" not found in order map`);
+//         console.info(map);
+//     }
+// }
 
 function wheelTicks(ev) {
     switch(ev.deltaMode) {
