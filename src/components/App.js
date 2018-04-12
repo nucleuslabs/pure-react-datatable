@@ -8,6 +8,7 @@ import CheckCircle from '../icons/check-circle.svg';
 import TimesCircle from '../icons/times-circle.svg';
 import css from '../styles/misc.less';
 import JOBS from '../data/jobs';
+import CLIENTS from '../data/clients';
 import SortIcon from '../icons/sort';
 import SortUp from '../icons/sort-up';
 import SortDown from '../icons/sort-down';
@@ -20,44 +21,16 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
 }
 
-// https://datatables.net/manual/server-side
-
-const SAMPLE_DATA = [
-    {
-        _id: 14770,
-        firstName: "Christopher",
-        lastName: "Peek",
-        fileNo: 'N0830671',
-        dob: '14-May-1983',
-        age: '34 yrs',
-        active: true,
-        gender: 'M',
-        starred: true,
-    },
-    {
-        _id: 64701,
-        firstName: "Tonya",
-        lastName: "Carr",
-        fileNo: 'N1100308',
-        dob: '31-Mar-1977',
-        age: '40 yrs',
-        active: false,
-        gender: 'F',
-        starred: false,
-    },
-]
-
-
 const config = {
-    
+    // https://datatables.net/manual/server-side
     async data({draw,start,length,search,order,columns}) {
         await sleep(750); // pretend we're waiting for the server :p
         // console.log(draw,start,length,search,order,columns);
         return {
             draw,
-            recordsTotal: SAMPLE_DATA.length,
-            recordsFiltered: Math.min(SAMPLE_DATA.length,length),
-            data: SAMPLE_DATA.slice(start,start+length),
+            recordsTotal: CLIENTS.length,
+            recordsFiltered: CLIENTS.length,
+            data: CLIENTS.slice(start,start+length),
         }
     },
     
