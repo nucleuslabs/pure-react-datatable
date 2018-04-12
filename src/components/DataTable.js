@@ -19,6 +19,7 @@ import ActionLink from './ActionLink';
 
 const ASC = 'asc';
 const DESC = 'desc';
+const PAGE_LINKS = 7; // todo: make this a prop/option?
 
 class PureDataTable extends React.Component {
     
@@ -191,7 +192,7 @@ class PureDataTable extends React.Component {
     }
 
     _refreshState = partialState => {
-        this._refreshNow(partialState);
+        this._refresh(partialState);
         this.setState(mergeState(partialState));
     }
 
@@ -250,6 +251,26 @@ class PureDataTable extends React.Component {
         const sortClassMap = {
             [ASC]: theme.sortAsc,
             [DESC]: theme.sortDesc,
+        }
+        
+        let pageNumbers;
+        if(pageCount <= PAGE_LINKS) {
+            pageNumbers = pageCount ? range(pageCount) : [];
+        } else {
+            const inc = pageCount/(PAGE_LINKS-1);
+            pageNumbers = [0];
+            let closeIdx = 0;
+            let closeDist = currentPage;
+            for(let i=1; i<PAGE_LINKS; ++i) {
+                const pg = Math.round(inc*i)-1;
+                const dist = Math.abs(pg-currentPage);
+                if(dist < closeDist) {
+                    closeDist = dist;
+                    closeIdx = i;
+                }
+                pageNumbers.push(pg);
+            }
+            pageNumbers[closeIdx] = currentPage;
         }
         
         return (
@@ -390,7 +411,7 @@ class PureDataTable extends React.Component {
                         {!recordsFiltered
                             ? (loading ? <span className={cc(theme.button)}>…</span> :
                                 <span className={cc(theme.button)}>–</span>)
-                            : range(pageCount).map(pg => (
+                            : pageNumbers.map(pg => (
                                 pg === currentPage
                                     ? <span key={pg} className={cc([theme.button,theme.current])}>{pg+1}</span>
                                     : <ActionLink key={pg} className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</ActionLink>
