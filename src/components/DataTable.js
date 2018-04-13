@@ -22,14 +22,14 @@ const DESC = 'desc';
 const PAGE_LINKS = 7; // todo: make this a prop/option?
 
 class PureDataTable extends React.Component {
-    
+
     draw = 0;
-   
+
     constructor(props) {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
         this.state = {
-            ...pick(props,['start','length','search','order']),
+            ...pick(props, ['start', 'length', 'search', 'order']),
             recordsTotal: null,
             recordsFiltered: null,
             data: [],
@@ -38,11 +38,11 @@ class PureDataTable extends React.Component {
         }
         this._refs = {}
     }
-    
+
     componentDidMount() {
         this._refreshNow();
     }
-    
+
     async _refreshNow(partialState) {
         let state = this.state;
         if(partialState) {
@@ -56,8 +56,8 @@ class PureDataTable extends React.Component {
                 start: state.start,
                 length: state.length,
                 search: state.search,
-                order: state.order.map(([column,dir]) => ({column,dir})),
-                columns: this.props.columns.map(c => pick(c,{
+                order: state.order.map(([column, dir]) => ({column, dir})),
+                columns: this.props.columns.map(c => pick(c, {
                     data: undefined,
                     name: undefined,
                     orderable: true,
@@ -86,16 +86,17 @@ class PureDataTable extends React.Component {
                 if(state.search.regex) {
                     try {
                         const re = new RegExp(state.search.value, 'i');
-                        filteredData = filteredData.filter(row => this.props.columns.some((_,n) => {
-                            return re.test(this._getValue(row,n,'filter'))
+                        filteredData = filteredData.filter(row => this.props.columns.some((_, n) => {
+                            return re.test(this._getValue(row, n, 'filter'))
                         }));
-                    } catch(_) {}
+                    } catch(_) {
+                    }
                 } else {
                     const searchTerms = state.search.value.trim().toLocaleLowerCase().split(/\s+/);
                     filteredData = filteredData.filter(row => {
-                        const values = this.props.columns.map((_,n) => this._getValue(row,n,'filter').toLocaleLowerCase());
+                        const values = this.props.columns.map((_, n) => this._getValue(row, n, 'filter').toLocaleLowerCase());
                         return searchTerms.every(term => {
-                            return this.props.columns.some((_,n) => {
+                            return this.props.columns.some((_, n) => {
                                 return values[n].includes(term);
                             })
                         })
@@ -103,14 +104,14 @@ class PureDataTable extends React.Component {
                 }
             }
             this.setState({
-                data: filteredData.slice(state.start,state.start+state.length),
+                data: filteredData.slice(state.start, state.start + state.length),
                 recordsTotal: this.props.data.length,
                 recordsFiltered: filteredData.length,
                 loading: false,
             })
         }
     }
-    
+
     // static async getDerivedStateFromProps(nextProps, prevState) {
     //     const data = await nextProps.data; // fixme: i don't think we're allowed to await.
     //     if(Array.isArray(data)) {
@@ -128,13 +129,13 @@ class PureDataTable extends React.Component {
     // }
 
     get currentPage() {
-        return Math.floor(this.state.start/this.state.length);
+        return Math.floor(this.state.start / this.state.length);
     }
-    
+
     get pageCount() {
-        return this.state.recordsFiltered == null ? 0 : Math.ceil(this.state.recordsFiltered/this.state.length);
+        return this.state.recordsFiltered == null ? 0 : Math.ceil(this.state.recordsFiltered / this.state.length);
     }
-    
+
     _getValue(row, colIdx, type) {
         // https://datatables.net/reference/option/columns.render
         // TODO: support `type` and orthogonal data https://datatables.net/examples/ajax/orthogonal-data.html
@@ -145,12 +146,12 @@ class PureDataTable extends React.Component {
             return row[colIdx];
         }
     }
-    
+
     _isOrderable(n) {
         const col = this.props.columns[n];
         return col.orderable === undefined || col.orderable;
     }
-    
+
     _lengthMenu = () => (
         <select value={this.state.length} onChange={this.changeLength} className={this.props.theme.lengthSelect}>
             {this.props.lengthMenu.map(len => (
@@ -158,7 +159,7 @@ class PureDataTable extends React.Component {
             ))}
         </select>
     )
-    
+
     _searchInput = () => (
         <input type="search" value={this.state.search.value} onChange={this.changeSearch} className={this.props.theme.searchInput}/>
     )
@@ -174,26 +175,26 @@ class PureDataTable extends React.Component {
             search: {
                 value: ev.target.value,
             }
-        });
+        }, true);
     }
-    
+
     _setLength = length => {
-        let start = Math.floor(this.state.start/length)*length;
-        this._refreshState({length,start});
+        let start = Math.floor(this.state.start / length) * length;
+        this._refreshState({length, start});
     }
-    
+
     handleLengthWheel = ev => {
         ev.preventDefault();
         let ticks = wheelTicks(ev);
         let idx = this.props.lengthMenu.indexOf(this.state.length);
         let next = idx + ticks;
         if(next >= 0 && next < this.props.lengthMenu.length) {
-            this._setLength(this.props.lengthMenu[next])
+            this._setLength(this.props.lengthMenu[next]);
         }
     }
 
-    _refreshState = partialState => {
-        this._refresh(partialState);
+    _refreshState = (partialState, deb) => {
+        this[deb ? '_refresh' : '_refreshNow'](partialState);
         this.setState(mergeState(partialState));
     }
 
@@ -203,7 +204,7 @@ class PureDataTable extends React.Component {
     }
 
     _incPage = amount => ev => {
-        this._setPage(this.currentPage+amount)(ev);
+        this._setPage(this.currentPage + amount)(ev);
     }
 
     _setPage = pg => ev => {
@@ -211,7 +212,7 @@ class PureDataTable extends React.Component {
         pg = clamp(pg, 0, this.pageCount - 1);
         if(pg === this.currentPage) return;
         this._refreshState(({length}) => ({
-            start: pg*length,
+            start: pg * length,
         }));
     }
 
@@ -224,47 +225,47 @@ class PureDataTable extends React.Component {
             let idx = this.state.order.findIndex(o => o[0] === n);
             if(idx < 0) {
                 this._refreshState({
-                    order: order => [...order, [n,ASC]]
+                    order: order => [...order, [n, ASC]]
                 })
             } else {
                 this._refreshState({
-                    order: order => arraySplice(order,idx,1,order[idx][1] === ASC ? [[n,DESC]] : [])
+                    order: order => arraySplice(order, idx, 1, order[idx][1] === ASC ? [[n, DESC]] : [])
                 })
             }
         } else {
             let dir = this.state.order.length && this.state.order[0][0] === n && this.state.order[0][1] === ASC ? DESC : ASC;
             this._refreshState({
-                order: [[n,dir]]
+                order: [[n, dir]]
             })
         }
     }
-    
-    // TODO: swipe right/left events?? assuming there's no horizontal scrolling
-    
-    render() {
-        const {theme,columns,language,columnKey,rowKey,lengthMenu,className} = this.props;
-        const {data,loading,recordsFiltered,recordsTotal,start,length,search,order} = this.state;
-        const {currentPage,pageCount} = this;
 
-        const sortIdxMap = columns.map((col,n) => order.findIndex(o => o[0] === n));
+    // TODO: swipe right/left events?? assuming there's no horizontal scrolling
+
+    render() {
+        const {theme, columns, language, columnKey, rowKey, lengthMenu, className, rowComponent} = this.props;
+        const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
+        const {currentPage, pageCount} = this;
+
+        const sortIdxMap = columns.map((col, n) => order.findIndex(o => o[0] === n));
         const sortDirMap = sortIdxMap.map(idx => idx < 0 ? null : order[idx][1]);
         // console.log(sortDirMap);
         const sortClassMap = {
             [ASC]: theme.sortAsc,
             [DESC]: theme.sortDesc,
         }
-        
+
         let pageNumbers;
         if(pageCount <= PAGE_LINKS) {
             pageNumbers = pageCount ? range(pageCount) : [];
         } else {
-            const inc = pageCount/(PAGE_LINKS-1);
+            const inc = pageCount / (PAGE_LINKS - 1);
             pageNumbers = [0];
             let closeIdx = 0;
             let closeDist = currentPage;
-            for(let i=1; i<PAGE_LINKS; ++i) {
-                const pg = Math.round(inc*i)-1;
-                const dist = Math.abs(pg-currentPage);
+            for(let i = 1; i < PAGE_LINKS; ++i) {
+                const pg = Math.round(inc * i) - 1;
+                const dist = Math.abs(pg - currentPage);
                 if(dist < closeDist) {
                     closeDist = dist;
                     closeIdx = i;
@@ -273,40 +274,40 @@ class PureDataTable extends React.Component {
             }
             pageNumbers[closeIdx] = currentPage;
         }
-        
+
         const passProps = {theme};
-        
+
         return (
-            <div className={cc([theme.wrapper,className,loading?theme.loading:false])}>
-                <div className={cc([theme.controlBar,theme.searchBar])}>
-                    
+            <div className={cc([theme.wrapper, className, loading ? theme.loading : false])}>
+                <div className={cc([theme.controlBar, theme.searchBar])}>
+
                     {language.lengthMenu && lengthMenu && lengthMenu.length
                         ? <div className={cc([theme.length])} onWheel={this.handleLengthWheel}>
-                                {render(language.lengthMenu, {Menu: this._lengthMenu, ...passProps})}
-                            </div> 
+                            {render(language.lengthMenu, {Menu: this._lengthMenu, ...passProps})}
+                        </div>
                         : null}
-                        
+
                     <div className={cc(theme.search)}>
-                        {language.search 
+                        {language.search
                             ? render(language.search, {Input: this._searchInput, ...passProps})
                             : null}
                     </div>
-                    
+
                     {search.value ? <div className={cc(theme.searchText)}>
                         Search results for “{search.value}”
                     </div> : null}
                 </div>
-                
+
                 <table role="grid" className={cc(theme.table)}>
                     <thead className={cc(theme.thead)}>
-                        <tr role="row" className={cc([theme.tr,theme.hrow])}>
-                            {columns.map((col,n) => {
+                        <tr role="row" className={cc([theme.tr, theme.hrow])}>
+                            {columns.map((col, n) => {
                                 let title = <span className={cc(theme.title)}>{call(col.title)}</span>;
                                 const sortDir = sortDirMap[n];
                                 const orderable = !!this._isOrderable(n);
                                 let sortClass;
                                 if(sortDirMap[n]) {
-                                    sortClass = [theme.sorted,sortClassMap[sortDirMap[n]]];
+                                    sortClass = [theme.sorted, sortClassMap[sortDirMap[n]]];
                                 } else if(orderable) {
                                     sortClass = theme.unsorted;
                                 }
@@ -324,19 +325,19 @@ class PureDataTable extends React.Component {
                                         </span>
                                     )
                                 }
-                                
-                                const {width,minWidth,maxWidth} = col;
-                                
+
+                                const {width, minWidth, maxWidth} = col;
+
                                 // let sortDir = orderIdx < 0 ? null : order[orderIdx][1];
                                 // console.log(orderIdx);
                                 return (
-                                    <th 
-                                        key={columnKey(col, n)} 
-                                        className={cc([theme.cell, theme.th, col.className, orderable ? theme.orderable : theme.unorderable,  sortClass])} 
-                                        scope="col" 
-                                        role="columnheader" 
+                                    <th
+                                        key={columnKey(col, n)}
+                                        className={cc([theme.cell, theme.th, col.className, orderable ? theme.orderable : theme.unorderable, sortClass])}
+                                        scope="col"
+                                        role="columnheader"
                                         aria-sort={sortDirMap[n] ? (sortDirMap[n] === ASC ? 'ascending' : 'descending') : 'none'}
-                                        style={{width,minWidth,maxWidth}}
+                                        style={{width, minWidth, maxWidth}}
                                     >
                                         {title}
                                     </th>
@@ -345,13 +346,23 @@ class PureDataTable extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.length ? data.map((row,m) => (
-                            <tr role="row" key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
-                                {columns.map((col,n) => {
-                                    
+                        {data.length ? data.map((row, m) => {
+                            return render(rowComponent, {
+                                key: rowKey(row, m),
+                                
+                                row: {
+                                    role: "row",
+                                    className: cc([theme.tr, theme.drow, m % 2 === 0 ? theme.even : theme.odd]),
+                                },
+                                
+                                data: row,
+                                index: m,
+                                
+                                cells: columns.map((col, n) => {
+
                                     // https://datatables.net/reference/option/columns.render
-                                    
-                                    
+
+
                                     // console.log(row,col,m,n);
                                     // let value;
                                     // if(Array.isArray(row)) {
@@ -369,82 +380,89 @@ class PureDataTable extends React.Component {
                                                 col: n,
                                             },
                                             ...passProps
-                                        })
+                                        });
                                     } else {
                                         cell = value;
                                     }
-                                    return <td key={columnKey(col,n)} className={cc([theme.cell,theme.td,col.className,sortDirMap[n] ? [sortClassMap[sortDirMap[n]],theme.sorted,theme[`sort${sortIdxMap[n]+1}`]] : theme.unsorted])}>{cell}</td>
-                                })}
-                            </tr>
-                        )) : (
+
+                                    return {
+                                        key: columnKey(col, n),
+                                        className: cc([theme.cell, theme.td, col.className, sortDirMap[n] ? [sortClassMap[sortDirMap[n]], theme.sorted, theme[`sort${sortIdxMap[n] + 1}`]] : theme.unsorted]),
+                                        children: cell,
+                                        // index: n,
+                                    };
+                                })
+                            });
+                        }) : (
                             loading ? (
-                                    <tr className={[theme.tr]}>
-                                        <td className={cc([theme.td,theme.loadingRecords,theme.empty])} colSpan={columns.length}>{language.loadingRecords}</td>
-                                    </tr>
-                                ) : (recordsTotal > 0 ? (<tr className={[theme.tr]}>
-                                    <td className={cc([theme.td,theme.zeroRecords,theme.empty])} colSpan={columns.length}>{language.zeroRecords}</td>
+                                <tr className={[theme.tr]}>
+                                    <td className={cc([theme.td, theme.loadingRecords, theme.empty])} colSpan={columns.length}>{language.loadingRecords}</td>
+                                </tr>
+                            ) : (recordsTotal > 0 ? (<tr className={[theme.tr]}>
+                                    <td className={cc([theme.td, theme.zeroRecords, theme.empty])} colSpan={columns.length}>{language.zeroRecords}</td>
                                 </tr>) : (
                                     <tr className={[theme.tr]}>
-                                        <td className={cc([theme.td,theme.noData,theme.empty])} colSpan={columns.length}>{language.emptyTable}</td>
+                                        <td className={cc([theme.td, theme.noData, theme.empty])} colSpan={columns.length}>{language.emptyTable}</td>
                                     </tr>
                                 )
-                        ))}
+                            ))}
                     </tbody>
                 </table>
-                
-                <div className={cc([theme.controlBar,theme.infoBar])}>
+
+                <div className={cc([theme.controlBar, theme.infoBar])}>
                     {language.info ? <div className={cc(theme.pageInfo)}>
-                        {!recordsFiltered 
-                            ? (loading ? render(language.infoLoading,passProps) : render(language.infoEmpty,passProps)) 
+                        {!recordsFiltered
+                            ? (loading ? render(language.infoLoading, passProps) : render(language.infoEmpty, passProps))
                             : render(language.info, {
-                                start: start+1,
-                                end: Math.min(start+data.length,recordsFiltered),
-                                total: recordsFiltered,
-                                max: recordsTotal,
-                                length: length,
+                                start: (start + 1).toLocaleString(),
+                                end: Math.min(start + data.length, recordsFiltered).toLocaleString(),
+                                total: recordsFiltered.toLocaleString(),
+                                max: recordsTotal.toLocaleString(),
+                                length: length.toLocaleString(),
                                 ...passProps
                             })
                         }
                     </div> : null}
-                    
+
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
-                            ? <span className={cc([theme.button,theme.disabled])}>Previous</span>
+                            ? <span className={cc([theme.button, theme.disabled])}>Previous</span>
                             : <ActionLink className={cc(theme.button)} onClick={this._incPage(-1)}>Previous</ActionLink>
                         }
-                        
+
                         {!recordsFiltered
                             ? (loading ? <span className={cc(theme.button)}>…</span> :
                                 <span className={cc(theme.button)}>–</span>)
                             : pageNumbers.map(pg => (
                                 pg === currentPage
-                                    ? <span key={pg} className={cc([theme.button,theme.current])}>{pg+1}</span>
-                                    : <ActionLink key={pg} className={cc([theme.button])} onClick={this._setPage(pg)}>{pg+1}</ActionLink>
+                                    ? <span key={pg} className={cc([theme.button, theme.current])}>{pg + 1}</span>
+                                    :
+                                    <ActionLink key={pg} className={cc([theme.button])} onClick={this._setPage(pg)}>{pg + 1}</ActionLink>
                             ))
                         }
 
                         {currentPage >= pageCount - 1
-                            ? <span className={cc([theme.button,theme.disabled])}>Next</span>
+                            ? <span className={cc([theme.button, theme.disabled])}>Next</span>
                             : <ActionLink className={cc(theme.button)} onClick={this._incPage(1)}>Next</ActionLink>
                         }
                     </div>
 
-                    <span className={cc(theme.pageXofY)}>Page {currentPage+1}{pageCount ? <Fragment> of {pageCount}</Fragment>: null}</span>
+                    <span className={cc(theme.pageXofY)}>Page {currentPage + 1}{pageCount ?
+                        <Fragment> of {pageCount}</Fragment> : null}</span>
                 </div>
-                
-                {loading && language.processing ? render(language.processing,passProps) : null}
+
+                {loading && language.processing ? render(language.processing, passProps) : null}
             </div>
         )
     }
 }
 
 
-
-const funcOrNode = PropTypes.oneOfType([PropTypes.func,PropTypes.node])
+const funcOrNode = PropTypes.oneOfType([PropTypes.func, PropTypes.node])
 
 PureDataTable.propTypes = {
     theme: PropTypes.object,
-    data: PropTypes.oneOfType([PropTypes.func,PropTypes.array]),
+    data: PropTypes.oneOfType([PropTypes.func, PropTypes.array]),
     columns: PropTypes.arrayOf(PropTypes.oneOfType([
         PropTypes.array,
         PropTypes.shape({
@@ -466,7 +484,7 @@ PureDataTable.propTypes = {
         infoLoading: funcOrNode,
         infoEmpty: funcOrNode,
         loadingRecords: funcOrNode,
-        
+
         // Text shown inside the table records when the is no information to be displayed after filtering.
         zeroRecords: funcOrNode,
 
@@ -487,11 +505,16 @@ PureDataTable.propTypes = {
     lengthMenu: PropTypes.arrayOf(PropTypes.number),
     // https://datatables.net/reference/option/searchDelay
     searchDelay: PropTypes.number,
-    
+
     // TODO: put page number and maybe search term in https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
     // put length, sorting, and show/hide column preferences in localStorage.
     // add reset button?
     storageKey: PropTypes.string,
+    rowComponent: PropTypes.func,
+}
+
+function Row({row,cells}) {
+    return <tr {...row}>{cells.map(c => <td {...c}/>)}</tr>;
 }
 
 export default function DataTable(props) {
@@ -499,13 +522,13 @@ export default function DataTable(props) {
         className: undefined,
         theme: __map,
         data: [],
-        rowKey: (row,idx) => row._id || row.id || row._key || row.key || idx,
-        columnKey: (col,idx) => col._id || col.id || col._key || col.key || col.name || idx,
+        rowKey: (row, idx) => row._id || row.id || row._key || row.key || idx,
+        columnKey: (col, idx) => col._id || col.id || col._key || col.key || col.name || idx,
         language: {
             // https://datatables.net/reference/option/language
             lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
             search: ({Input}) => <label><span>Search:</span><Input/></label>,
-            info: ({start,end,total,max,length}) => <Fragment>
+            info: ({start, end, total, max, length}) => <Fragment>
                 <Fragment>Showing </Fragment>
                 {start === 1 && length >= total
                     ? <Fragment>all</Fragment>
@@ -532,8 +555,9 @@ export default function DataTable(props) {
             regex: false,
         },
         order: [[0, ASC]],
+        rowComponent: Row,
     });
-    
+
     if(options.order.length) {
         // https://datatables.net/reference/option/order
         const orderMap = {};
@@ -547,11 +571,11 @@ export default function DataTable(props) {
         if(!Array.isArray(options.order[0])) {
             options.order = [options.order];
         }
-        options.order = options.order.map(([col,dir]) => {
+        options.order = options.order.map(([col, dir]) => {
             if(isString(col)) {
                 col = orderMap[col];
             }
-            return [col,String(dir).toLowerCase()];
+            return [col, String(dir).toLowerCase()];
         });
     }
     return <PureDataTable {...options}/>
@@ -574,9 +598,9 @@ export default function DataTable(props) {
 function wheelTicks(ev) {
     switch(ev.deltaMode) {
         case MouseEvent.DOM_DELTA_PIXEL:
-            return Math.ceil(ev.deltaY/53);
+            return Math.ceil(ev.deltaY / 53);
         case MouseEvent.DOM_DELTA_LINE:
-            return Math.ceil(ev.deltaY/3);
+            return Math.ceil(ev.deltaY / 3);
         case MouseEvent.DOM_DELTA_PAGE:
             return Math.ceil(ev.deltaY);
     }
