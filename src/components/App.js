@@ -142,8 +142,8 @@ function App() {
     return (
         <ErrorBoundary>
             <h1>DataTable Examples</h1>
-            {/*<h2>Local data, datatables.net CSS</h2>*/}
-            {/*<DataTable theme={cssBridge} {...jobsTable} />*/}
+            <h2>Local data, datatables.net CSS</h2>
+            <DataTable theme={cssBridge} {...jobsTable} />
             <h2>Remote data, custom CSS</h2>
             <DataTable theme={cssCustom} {...config} />
         </ErrorBoundary>

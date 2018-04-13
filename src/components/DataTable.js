@@ -477,7 +477,9 @@ PureDataTable.propTypes = {
             ascending: funcOrNode,
             descending: funcOrNode,
             unsorted: funcOrNode,
-        })
+        }),
+
+        processing: funcOrNode,
     }),
     // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
     rowKey: PropTypes.func,

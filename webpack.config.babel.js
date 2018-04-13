@@ -118,21 +118,7 @@ export default {
                 removeComments: true,
             },
             hash: true,
-            inject: 'head', // <=
-            // files: {
-            //     css: [ '[name].css' ],
-            //     js: [ '[name].js'],
-            //     chunks: {
-            //         head: {
-            //             'entry': '[name].css',
-            //             'css': '[name].css'
-            //         },
-            //         main: {
-            //             'entry': '[name].js',
-            //             'css': []
-            //         },
-            //     }
-            // }
+            inject: 'head', 
         }),
         new ScriptExtHtmlWebpackPlugin({
             defer: 'app',
@@ -151,9 +137,9 @@ export default {
         headers: {
             'Access-Control-Allow-Origin': '*',
         },
-        watchOptions: {
-            aggregateTimeout: 250,
-            poll: 50
-        },
+        // watchOptions: {
+        //     aggregateTimeout: 250,
+        //     poll: 50
+        // },
     },
 };
