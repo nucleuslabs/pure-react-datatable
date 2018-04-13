@@ -1,4 +1,6 @@
 import {ProvidePlugin, IgnorePlugin, NamedModulesPlugin, HotModuleReplacementPlugin} from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import ScriptExtHtmlWebpackPlugin from 'script-ext-html-webpack-plugin';
 
 const src = `${__dirname}/src`;
 const publicDir = `${__dirname}/public`;
@@ -6,13 +8,16 @@ const publicDir = `${__dirname}/public`;
 const cssLoaders = [
     {
         loader: 'style-loader',
+        options: {
+            sourceMap: false,
+        }
     },
     {
         loader: 'css-loader',
         options: {
             modules: true,
             localIdentName: '[name]_[local]--[hash:base64:5]',
-            sourceMap: true,
+            sourceMap: false,
             root: publicDir,
             camelCase: true,
         }
@@ -48,7 +53,8 @@ export default {
     },
     output: {
         path: publicDir,
-        filename: '[name].js',
+        filename: '[name].bundle.js',
+        chunkFilename: 'chunk.[id].js',
         publicPath: '/',
         pathinfo: true,
         crossOriginLoading: 'anonymous'
@@ -103,6 +109,35 @@ export default {
         }),
         new NamedModulesPlugin,
         new HotModuleReplacementPlugin,
+        new HtmlWebpackPlugin( {
+            template: 'index.html',
+            filename: 'index.html',
+            minify: {
+                collapseWhitespace: true,
+                collapseBooleanAttributes: true,
+                removeComments: true,
+            },
+            hash: true,
+            inject: 'head', // <=
+            // files: {
+            //     css: [ '[name].css' ],
+            //     js: [ '[name].js'],
+            //     chunks: {
+            //         head: {
+            //             'entry': '[name].css',
+            //             'css': '[name].css'
+            //         },
+            //         main: {
+            //             'entry': '[name].js',
+            //             'css': []
+            //         },
+            //     }
+            // }
+        }),
+        new ScriptExtHtmlWebpackPlugin({
+            defer: 'app',
+            sync: 'base',
+        })
     ],
     devServer: {
         host: '0.0.0.0',
