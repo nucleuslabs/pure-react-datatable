@@ -39,16 +39,18 @@ class Processing extends React.Component {
 
     componentDidMount() {
         if(!this.div) return;
-        setTimeout(() => {
+        // setTimeout(() => {
             const wrapper = this.div.parentElement;
             const tbody = wrapper.querySelector('table>tbody');
 
             const wrapRect = wrapper.getBoundingClientRect();
             const tbodyRect = tbody.getBoundingClientRect();
+            // console.log(JSON.stringify(wrapRect));
+            // console.log(JSON.stringify(tbodyRect));
 
             this.div.style.top = `${tbodyRect.top - wrapRect.top + 1}px`;
             this.div.style.bottom = `${wrapRect.bottom - tbodyRect.bottom}px`;
-        },0);
+        // },0);
     }
 
     render() {
@@ -59,7 +61,7 @@ class Processing extends React.Component {
 const config = {
     // https://datatables.net/manual/server-side
     async data({draw,start,length,search,order,columns}) {
-        await sleep(75000); // pretend we're waiting for the server :p
+        await sleep(750); // pretend we're waiting for the server :p
         // console.log(draw,start,length,search,order,columns);
         return {
             draw,

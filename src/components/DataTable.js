@@ -39,10 +39,6 @@ class PureDataTable extends React.Component {
         this._refs = {}
     }
     
-    createRef = name => el => {
-        this._refs[name] = el;
-    }
-
     componentDidMount() {
         this._refreshNow();
     }
@@ -248,7 +244,7 @@ class PureDataTable extends React.Component {
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu,className} = this.props;
         const {data,loading,recordsFiltered,recordsTotal,start,length,search,order} = this.state;
-        const {currentPage,pageCount,_refs} = this;
+        const {currentPage,pageCount} = this;
 
         const sortIdxMap = columns.map((col,n) => order.findIndex(o => o[0] === n));
         const sortDirMap = sortIdxMap.map(idx => idx < 0 ? null : order[idx][1]);
@@ -278,10 +274,10 @@ class PureDataTable extends React.Component {
             pageNumbers[closeIdx] = currentPage;
         }
         
-        const passProps = {theme,refs: _refs};
+        const passProps = {theme};
         
         return (
-            <div className={cc([theme.wrapper,className,loading?theme.loading:false])} ref={this.createRef('wrapper')}>
+            <div className={cc([theme.wrapper,className,loading?theme.loading:false])}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     
                     {language.lengthMenu && lengthMenu && lengthMenu.length
@@ -301,8 +297,8 @@ class PureDataTable extends React.Component {
                     </div> : null}
                 </div>
                 
-                <table role="grid" className={cc(theme.table)} ref={this.createRef('table')}>
-                    <thead className={cc(theme.thead)} ref={this.createRef('thead')}>
+                <table role="grid" className={cc(theme.table)}>
+                    <thead className={cc(theme.thead)}>
                         <tr role="row" className={cc([theme.tr,theme.hrow])}>
                             {columns.map((col,n) => {
                                 let title = <span className={cc(theme.title)}>{call(col.title)}</span>;
@@ -348,7 +344,7 @@ class PureDataTable extends React.Component {
                             })}
                         </tr>
                     </thead>
-                    <tbody ref={this.createRef('tbody')}>
+                    <tbody>
                         {data.length ? data.map((row,m) => (
                             <tr role="row" key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
                                 {columns.map((col,n) => {
