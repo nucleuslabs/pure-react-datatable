@@ -26,4 +26,5 @@ export default {
     sort4: 'sorting_3', // datatables.net stops at 3
     sort5: 'sorting_3',
     sort6: 'sorting_3',
+    processing: 'dataTables_processing',
 }

@@ -21,10 +21,45 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
 }
 
+// function Processing({theme,refs}) {
+//     const style = {};
+//     console.log('processing');
+//     if(refs.wrapper && refs.tbody) {
+//         const wrapRect = refs.wrapper.getBoundingClientRect();
+//         const tbodyRect = refs.tbody.getBoundingClientRect();
+//         style.top = tbodyRect.top - wrapRect.top + 1;
+//         style.bottom = wrapRect.bottom - tbodyRect.bottom;
+//         console.log(wrapRect.top,tbodyRect.top,style.top);
+//     }
+//     return <div className={theme.processing} style={style}>Loading…</div>;
+// }
+
+class Processing extends React.Component {
+
+
+    componentDidMount() {
+        if(!this.div) return;
+        setTimeout(() => {
+            const wrapper = this.div.parentElement;
+            const tbody = wrapper.querySelector('table>tbody');
+
+            const wrapRect = wrapper.getBoundingClientRect();
+            const tbodyRect = tbody.getBoundingClientRect();
+
+            this.div.style.top = `${tbodyRect.top - wrapRect.top + 1}px`;
+            this.div.style.bottom = `${wrapRect.bottom - tbodyRect.bottom}px`;
+        },0);
+    }
+
+    render() {
+        return <div className={this.props.theme.processing} ref={n => this.div = n}>Loading…</div>
+    }
+}
+
 const config = {
     // https://datatables.net/manual/server-side
     async data({draw,start,length,search,order,columns}) {
-        await sleep(750); // pretend we're waiting for the server :p
+        await sleep(75000); // pretend we're waiting for the server :p
         // console.log(draw,start,length,search,order,columns);
         return {
             draw,
@@ -77,9 +112,13 @@ const config = {
             ascending: <Icon className={cssCustom.sortIcon}><SortUp/></Icon>,
             descending: <Icon className={cssCustom.sortIcon}><SortDown/></Icon>,
             unsorted: <Icon className={cssCustom.sortIcon}><SortIcon/></Icon>,
-        }
+        },
+        loadingRecords: '',
+        processing: Processing,
     }
 }
+
+
 
 const jobsTable = {
     // https://datatables.net/examples/data_sources/js_array.html
@@ -94,17 +133,15 @@ const jobsTable = {
     ],
     searchDelay: 16,
     lengthMenu: [5,10,20,100],
-
-}
-
+};
 
 function App() {
 
     return (
         <ErrorBoundary>
             <h1>DataTable Examples</h1>
-            <h2>Local data, datatables.net CSS</h2>
-            <DataTable theme={cssBridge} {...jobsTable} />
+            {/*<h2>Local data, datatables.net CSS</h2>*/}
+            {/*<DataTable theme={cssBridge} {...jobsTable} />*/}
             <h2>Remote data, custom CSS</h2>
             <DataTable theme={cssCustom} {...config} />
         </ErrorBoundary>

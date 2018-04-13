@@ -36,6 +36,11 @@ class PureDataTable extends React.Component {
             loading: true,
             error: null,
         }
+        this._refs = {}
+    }
+    
+    createRef = name => el => {
+        this._refs[name] = el;
     }
 
     componentDidMount() {
@@ -243,7 +248,7 @@ class PureDataTable extends React.Component {
     render() {
         const {theme,columns,language,columnKey,rowKey,lengthMenu,className} = this.props;
         const {data,loading,recordsFiltered,recordsTotal,start,length,search,order} = this.state;
-        const {currentPage,pageCount} = this;
+        const {currentPage,pageCount,_refs} = this;
 
         const sortIdxMap = columns.map((col,n) => order.findIndex(o => o[0] === n));
         const sortDirMap = sortIdxMap.map(idx => idx < 0 ? null : order[idx][1]);
@@ -273,19 +278,21 @@ class PureDataTable extends React.Component {
             pageNumbers[closeIdx] = currentPage;
         }
         
+        const passProps = {theme,refs: _refs};
+        
         return (
-            <div className={cc([theme.wrapper,className])}>
+            <div className={cc([theme.wrapper,className,loading?theme.loading:false])} ref={this.createRef('wrapper')}>
                 <div className={cc([theme.controlBar,theme.searchBar])}>
                     
                     {language.lengthMenu && lengthMenu && lengthMenu.length
                         ? <div className={cc([theme.length])} onWheel={this.handleLengthWheel}>
-                                {render(language.lengthMenu, {Menu: this._lengthMenu})}
+                                {render(language.lengthMenu, {Menu: this._lengthMenu, ...passProps})}
                             </div> 
                         : null}
                         
                     <div className={cc(theme.search)}>
                         {language.search 
-                            ? render(language.search, {Input: this._searchInput})
+                            ? render(language.search, {Input: this._searchInput, ...passProps})
                             : null}
                     </div>
                     
@@ -294,8 +301,8 @@ class PureDataTable extends React.Component {
                     </div> : null}
                 </div>
                 
-                <table role="grid" className={cc(theme.table)}>
-                    <thead className={cc(theme.thead)}>
+                <table role="grid" className={cc(theme.table)} ref={this.createRef('table')}>
+                    <thead className={cc(theme.thead)} ref={this.createRef('thead')}>
                         <tr role="row" className={cc([theme.tr,theme.hrow])}>
                             {columns.map((col,n) => {
                                 let title = <span className={cc(theme.title)}>{call(col.title)}</span>;
@@ -341,7 +348,7 @@ class PureDataTable extends React.Component {
                             })}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody ref={this.createRef('tbody')}>
                         {data.length ? data.map((row,m) => (
                             <tr role="row" key={rowKey(row,m)} className={cc([theme.tr,theme.drow,m%2===0?theme.even:theme.odd])}>
                                 {columns.map((col,n) => {
@@ -364,7 +371,8 @@ class PureDataTable extends React.Component {
                                             meta: {
                                                 row: m,
                                                 col: n,
-                                            }
+                                            },
+                                            ...passProps
                                         })
                                     } else {
                                         cell = value;
@@ -391,13 +399,14 @@ class PureDataTable extends React.Component {
                 <div className={cc([theme.controlBar,theme.infoBar])}>
                     {language.info ? <div className={cc(theme.pageInfo)}>
                         {!recordsFiltered 
-                            ? (loading ? render(language.infoLoading) : render(language.infoEmpty)) 
+                            ? (loading ? render(language.infoLoading,passProps) : render(language.infoEmpty,passProps)) 
                             : render(language.info, {
                                 start: start+1,
                                 end: Math.min(start+data.length,recordsFiltered),
                                 total: recordsFiltered,
                                 max: recordsTotal,
                                 length: length,
+                                ...passProps
                             })
                         }
                     </div> : null}
@@ -426,6 +435,8 @@ class PureDataTable extends React.Component {
 
                     <span className={cc(theme.pageXofY)}>Page {currentPage+1}{pageCount ? <Fragment> of {pageCount}</Fragment>: null}</span>
                 </div>
+                
+                {loading && language.processing ? render(language.processing,passProps) : null}
             </div>
         )
     }
@@ -508,6 +519,7 @@ export default function DataTable(props) {
             infoLoading: "Showing … to … of … entries",
             infoEmpty: "Showing all 0 entries",
             loadingRecords: "Loading…",
+            processing: ({theme}) => <div className={theme.processing}>Processing…</div>,
             zeroRecords: "No matching records found",
             emptyTable: "No data available in table",
             sortIcons: null,
