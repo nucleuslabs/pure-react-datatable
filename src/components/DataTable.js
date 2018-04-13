@@ -243,7 +243,7 @@ class PureDataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
 
     render() {
-        const {theme, columns, language, columnKey, rowKey, lengthMenu, className, rowComponent} = this.props;
+        const {theme, columns, language, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
         const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
 
@@ -347,51 +347,54 @@ class PureDataTable extends React.Component {
                     </thead>
                     <tbody>
                         {data.length ? data.map((row, m) => {
-                            return render(rowComponent, {
-                                key: rowKey(row, m),
-                                
-                                row: {
-                                    role: "row",
-                                    className: cc([theme.tr, theme.drow, m % 2 === 0 ? theme.even : theme.odd]),
-                                },
-                                
-                                data: row,
-                                index: m,
-                                
-                                cells: columns.map((col, n) => {
+                            const cells = columns.map((col, n) => {
 
-                                    // https://datatables.net/reference/option/columns.render
+                                // https://datatables.net/reference/option/columns.render
 
 
-                                    // console.log(row,col,m,n);
-                                    // let value;
-                                    // if(Array.isArray(row)) {
-                                    //     value 
-                                    // }
-                                    let value = this._getValue(row, n, 'display');
-                                    let cell;
-                                    if(col.render) {
-                                        cell = render(col.render, {
-                                            data: value,
-                                            type: 'display',
-                                            row,
-                                            meta: {
-                                                row: m,
-                                                col: n,
-                                            },
-                                            ...passProps
-                                        });
-                                    } else {
-                                        cell = value;
-                                    }
+                                // console.log(row,col,m,n);
+                                // let value;
+                                // if(Array.isArray(row)) {
+                                //     value 
+                                // }
+                                let value = this._getValue(row, n, 'display');
+                                let cell;
+                                if(col.render) {
+                                    cell = render(col.render, {
+                                        data: value,
+                                        type: 'display',
+                                        row,
+                                        meta: {
+                                            row: m,
+                                            col: n,
+                                        },
+                                        ...passProps
+                                    });
+                                } else {
+                                    cell = value;
+                                }
 
-                                    return {
-                                        key: columnKey(col, n),
+                                return {
+                                    key: columnKey(col, n),
+                                    attrs: {
                                         className: cc([theme.cell, theme.td, col.className, sortDirMap[n] ? [sortClassMap[sortDirMap[n]], theme.sorted, theme[`sort${sortIdxMap[n] + 1}`]] : theme.unsorted]),
                                         children: cell,
-                                        // index: n,
-                                    };
-                                })
+                                    },
+                                    index: n,
+                                    data: value,
+                                    row: row,
+                                };
+                            });
+
+                            return render(rowComponent, {
+                                key: rowKey(row, m),
+                                attrs: {
+                                    role: "row",
+                                    className: cc([theme.tr, theme.drow, m % 2 === 0 ? theme.even : theme.odd]),
+                                    children: cells.map(c => render(cellComponent,c)),
+                                },
+                                data: row,
+                                index: m,
                             });
                         }) : (
                             loading ? (
@@ -511,10 +514,15 @@ PureDataTable.propTypes = {
     // add reset button?
     storageKey: PropTypes.string,
     rowComponent: PropTypes.func,
+    cellComponent: PropTypes.func,
 }
 
-function Row({row,cells}) {
-    return <tr {...row}>{cells.map(c => <td {...c}/>)}</tr>;
+function DataTableRow({attrs}) {
+    return <tr {...attrs}/>;
+}
+
+function DataTableCell({attrs}) {
+    return <td {...attrs}/>;
 }
 
 export default function DataTable(props) {
@@ -555,7 +563,8 @@ export default function DataTable(props) {
             regex: false,
         },
         order: [[0, ASC]],
-        rowComponent: Row,
+        rowComponent: DataTableRow,
+        cellComponent: DataTableCell,
     });
 
     if(options.order.length) {
