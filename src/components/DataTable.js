@@ -235,6 +235,7 @@ class PureDataTable extends React.Component {
         } else {
             let dir = this.state.order.length && this.state.order[0][0] === n && this.state.order[0][1] === ASC ? DESC : ASC;
             this._refreshState({
+                start: 0,
                 order: [[n, dir]]
             })
         }
@@ -255,27 +256,7 @@ class PureDataTable extends React.Component {
             [DESC]: theme.sortDesc,
         }
 
-        let pageNumbers;
-        if(pageCount <= PAGE_LINKS) {
-            pageNumbers = pageCount ? range(pageCount) : [];
-        } else {
-            const inc = pageCount / (PAGE_LINKS - 1);
-            pageNumbers = [0];
-            let closeIdx = 0;
-            let closeDist = currentPage;
-            for(let i = 1; i < PAGE_LINKS; ++i) {
-                const pg = Math.round(inc * i) - 1;
-                const dist = Math.abs(pg - currentPage);
-                if(dist < closeDist) {
-                    closeDist = dist;
-                    closeIdx = i;
-                }
-                pageNumbers.push(pg);
-            }
-            pageNumbers[closeIdx] = currentPage;
-        }
-
-        const passProps = {theme};
+        const extraProps = {theme};
 
         return (
             <div className={cc([theme.wrapper, className, loading ? theme.loading : false])}>
@@ -283,13 +264,13 @@ class PureDataTable extends React.Component {
 
                     {language.lengthMenu && lengthMenu && lengthMenu.length
                         ? <div className={cc([theme.length])} onWheel={this.handleLengthWheel}>
-                            {render(language.lengthMenu, {Menu: this._lengthMenu, ...passProps})}
+                            {render(language.lengthMenu, {Menu: this._lengthMenu, ...extraProps})}
                         </div>
                         : null}
 
                     <div className={cc(theme.search)}>
                         {language.search
-                            ? render(language.search, {Input: this._searchInput, ...passProps})
+                            ? render(language.search, {Input: this._searchInput, ...extraProps})
                             : null}
                     </div>
 
@@ -368,7 +349,7 @@ class PureDataTable extends React.Component {
                                             row: m,
                                             col: n,
                                         },
-                                        ...passProps
+                                        ...extraProps
                                     });
                                 } else {
                                     cell = value;
@@ -396,7 +377,11 @@ class PureDataTable extends React.Component {
                                 data: row,
                                 index: m,
                             });
+                            
+                            // TODO: some kind of "End of list" padding so that the final page isn't shorter than the rest?
+                            
                         }) : (
+                            // TODO: some kind of filler cell component while the data is loading, so we have some lorem to put behind the loading splash?
                             loading ? (
                                 <tr className={[theme.tr]}>
                                     <td className={cc([theme.td, theme.loadingRecords, theme.empty])} colSpan={columns.length}>{language.loadingRecords}</td>
@@ -415,14 +400,14 @@ class PureDataTable extends React.Component {
                 <div className={cc([theme.controlBar, theme.infoBar])}>
                     {language.info ? <div className={cc(theme.pageInfo)}>
                         {!recordsFiltered
-                            ? (loading ? render(language.infoLoading, passProps) : render(language.infoEmpty, passProps))
+                            ? (loading ? render(language.infoLoading, extraProps) : render(language.infoEmpty, extraProps))
                             : render(language.info, {
                                 start: (start + 1).toLocaleString(),
                                 end: Math.min(start + data.length, recordsFiltered).toLocaleString(),
                                 total: recordsFiltered.toLocaleString(),
                                 max: recordsTotal.toLocaleString(),
                                 length: length.toLocaleString(),
-                                ...passProps
+                                ...extraProps
                             })
                         }
                     </div> : null}
@@ -434,14 +419,9 @@ class PureDataTable extends React.Component {
                         }
 
                         {!recordsFiltered
-                            ? (loading ? <span className={cc(theme.button)}>…</span> :
+                            ? (loading ? <span className={cc(theme.pageNumberSpacer)}>⋯</span> :
                                 <span className={cc(theme.button)}>–</span>)
-                            : pageNumbers.map(pg => (
-                                pg === currentPage
-                                    ? <span key={pg} className={cc([theme.button, theme.current])}>{pg + 1}</span>
-                                    :
-                                    <ActionLink key={pg} className={cc([theme.button])} onClick={this._setPage(pg)}>{pg + 1}</ActionLink>
-                            ))
+                            : <PageNumbers {...extraProps} currentPage={currentPage} pageCount={pageCount} setPage={this._setPage} />
                         }
 
                         {currentPage >= pageCount - 1
@@ -454,10 +434,44 @@ class PureDataTable extends React.Component {
                         <Fragment> of {pageCount}</Fragment> : null}</span>
                 </div>
 
-                {loading && language.processing ? render(language.processing, passProps) : null}
+                {loading && language.processing ? render(language.processing, extraProps) : null}
             </div>
         )
     }
+}
+
+function PageNumbers({currentPage,pageCount,theme,setPage}) {
+    let pageNumbers;
+    const lastPage = pageCount - 1;
+    if(pageCount <= PAGE_LINKS) {
+        pageNumbers = pageCount ? range(pageCount) : [];
+    } else if(currentPage < 4) {
+        pageNumbers = [0,1,2,3,4,pageCount-1];
+    } else if(currentPage > pageCount - 5) {
+        pageNumbers = [0,lastPage-4,lastPage-3,lastPage-2,lastPage-1,lastPage];
+    } else {
+        pageNumbers = [0,currentPage-1,currentPage,currentPage+1,lastPage];
+    }
+    
+    const spacer = <span className={cc(theme.pageNumberSpacer)}>⋯</span>;
+    let prevPage = -1;
+    
+    return pageNumbers.map(pg => {
+        
+        let ret = (
+            pg === currentPage
+                ? <span key={pg} className={cc([theme.button, theme.current])}>{pg + 1}</span>
+                : <ActionLink key={pg} className={cc([theme.button])} onClick={setPage(pg)}>{pg + 1}</ActionLink>
+        );
+        
+        if(pg > prevPage + 1) {
+            ret = <Fragment>{spacer}{ret}</Fragment>
+        }
+        
+        prevPage = pg;
+        
+        return ret;
+    });
 }
 
 

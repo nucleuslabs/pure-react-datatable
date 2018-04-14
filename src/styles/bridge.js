@@ -27,4 +27,5 @@ export default {
     sort5: 'sorting_3',
     sort6: 'sorting_3',
     processing: 'dataTables_processing',
+    pageNumberSpacer: 'ellipsis',
 }
