@@ -150,6 +150,25 @@ export default function MyDataTable({...props}) {
 }
 ```
 
+### Data
+
+Client-side data is not fully implemented. However, you can implement it in userland if you feel inclined (if you do, please share). The `data` prop is a function that feeds you all the information you need to do searching and sorting yourself:
+
+```js
+async data({draw,start,length,search,order,columns}) {
+    return {
+        draw,
+        recordsTotal: CLIENTS.length,
+        recordsFiltered: CLIENTS.length,
+        data: CLIENTS.slice(start,start+length),
+    }
+}
+```
+
+It expects you to return a `Promise`, so you can either do this client-side or send the arguments to your server and do it there. BYO ajax library.
+
+If you simply forward these arguments to your server, it should work with any existing endpoints you have, if you previously used datatables.net -- as long as you are using the 1.10+ API (hungarian notation not supported).
+
 ### License
 
 MIT.
