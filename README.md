@@ -18,7 +18,7 @@ You can clone the repo and run GNU `make` to install all the dependencies and st
 A basic example that looks *almost* identical to [the one on datatables.net](https://datatables.net/examples/data_sources/js_array.html):
 
 ```js
-import DataTable from 'pure-react-datatable`;
+import DataTable from 'pure-react-datatable';
 
 const jobsTable = {
     data: JOBS,
