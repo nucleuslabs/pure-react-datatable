@@ -137,17 +137,52 @@ const jobsTable = {
     lengthMenu: [5,10,20,100],
 };
 
-function App() {
+const ButtonRow = ({children}) => <div className={css.buttonRow}>{children}</div>;
 
-    return (
-        <ErrorBoundary>
-            <h1>DataTable Examples</h1>
-            <h2>Local data, datatables.net CSS</h2>
-            <DataTable theme={cssBridge} {...jobsTable} />
-            <h2>Remote data, custom CSS</h2>
-            <DataTable theme={cssCustom} {...config} />
-        </ErrorBoundary>
-    )
+class ActionButton extends React.Component {
+    
+    click = ev => {
+        ev.preventDefault();
+        if(this.props.onClick) {
+            this.props.onClick(ev);
+        }
+    };
+    
+    render() {
+        return <button className={css.button} {...this.props} onClick={this.click}/>;
+    }
+}
+    
+class App extends React.Component {
+    
+    fullReset = ev => {
+        this.remoteDT.draw('full-reset');
+    }
+
+    fullHold = ev => {
+        this.remoteDT.draw('full-hold');
+    }
+
+    page = ev => {
+        this.remoteDT.draw('page');
+    }
+    
+    render() {
+        return (
+            <ErrorBoundary>
+                <h1>DataTable Examples</h1>
+                <h2>Local data, datatables.net CSS</h2>
+                <DataTable theme={cssBridge} {...jobsTable} />
+                <h2>Remote data, custom CSS</h2>
+                <DataTable ref={n => this.remoteDT = n} theme={cssCustom} {...config} />
+                <ButtonRow>
+                    <ActionButton onClick={this.fullReset}>full-reset</ActionButton>
+                    <ActionButton onClick={this.fullHold}>full-hold</ActionButton>
+                    <ActionButton onClick={this.page}>page</ActionButton>
+                </ButtonRow>
+            </ErrorBoundary>
+        )
+    }
 }
 
 export default hot(module)(App);

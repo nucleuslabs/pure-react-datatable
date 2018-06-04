@@ -23,7 +23,7 @@ const PAGE_LINKS = 7; // todo: make this a prop/option?
 
 class PureDataTable extends React.Component {
 
-    draw = 0;
+    _ajaxCounter = 0;
 
     constructor(props) {
         super(props);
@@ -52,7 +52,7 @@ class PureDataTable extends React.Component {
             this.setState({loading: true})
             // https://datatables.net/manual/server-side
             let resp = await this.props.data({
-                draw: ++this.draw,
+                draw: ++this._ajaxCounter,
                 start: state.start,
                 length: state.length,
                 search: state.search,
@@ -68,7 +68,7 @@ class PureDataTable extends React.Component {
                     searchable: true,
                 })),
             })
-            if(resp.draw < this.draw) return;
+            if(resp.draw < this._ajaxCounter) return;
             // TODO: if resp.data.length === resp.recordsTotal, switch to client-side filtering??
             // TODO: if server over-fetches (returns enough for page 2) allow going to next page without re-fetching?
             const data = resp.data.slice(0, state.length);
@@ -196,6 +196,18 @@ class PureDataTable extends React.Component {
     _refreshState = (partialState, deb) => {
         this[deb ? '_refresh' : '_refreshNow'](partialState);
         this.setState(mergeState(partialState));
+    }
+    
+    draw = (paging=true) => {
+        // https://datatables.net/reference/api/draw()
+        if(paging === 'full-reset' || paging === true) {
+            this._refreshState({start: 0, search: ''}, false);
+        } else if(paging === 'full-hold' || paging === false) {
+            // FIXME: what is the difference between "full-hold" and "page"??
+            this._refreshNow();
+        } else if(paging === 'page') {
+            this._refreshNow();
+        }
     }
 
     handlePageWheel = ev => {
@@ -539,7 +551,7 @@ function DataTableCell({attrs}) {
     return <td {...attrs}/>;
 }
 
-export default function DataTable(props) {
+export default React.forwardRef((props,ref) => {
     const options = defaultsDeep(props, {
         className: undefined,
         theme: __map,
@@ -601,8 +613,8 @@ export default function DataTable(props) {
             return [col, String(dir).toLowerCase()];
         });
     }
-    return <PureDataTable {...options}/>
-}
+    return <PureDataTable ref={ref} {...options}/>
+})
 
 // function fixOrder(order, map) {
 //     if(!order) return;
