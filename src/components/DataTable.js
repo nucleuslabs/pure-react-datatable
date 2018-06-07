@@ -16,6 +16,7 @@ import {
 } from '../util';
 
 import ActionLink from './ActionLink';
+import {noop} from 'lodash';
 
 const ASC = 'asc';
 const DESC = 'desc';
@@ -201,7 +202,7 @@ class PureDataTable extends React.Component {
     draw = (paging=true) => {
         // https://datatables.net/reference/api/draw()
         if(paging === 'full-reset' || paging === true) {
-            this._refreshState({start: 0, search: ''}, false);
+            this._refreshState({start: 0, search: {value:''}}, false);
         } else if(paging === 'full-hold' || paging === false) {
             // FIXME: what is the difference between "full-hold" and "page"??
             this._refreshNow();
@@ -477,7 +478,7 @@ function PageNumbers({currentPage,pageCount,theme,setPage}) {
         );
         
         if(pg > prevPage + 1) {
-            ret = <Fragment>{spacer}{ret}</Fragment>
+            ret = <Fragment key={pg}>{spacer}{ret}</Fragment>
         }
         
         prevPage = pg;
@@ -551,7 +552,16 @@ function DataTableCell({attrs}) {
     return <td {...attrs}/>;
 }
 
-export default React.forwardRef((props,ref) => {
+export function makeDataTable() {
+    const ref = React.createRef();
+
+    return {
+        draw: (...args) => ref.current && ref.current.draw(...args),
+        Component: (props) => <DataTable {...props} __SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED={ref}/>,
+    }
+}
+
+export default function DataTable({__SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,...props}) {
     const options = defaultsDeep(props, {
         className: undefined,
         theme: __map,
@@ -613,8 +623,10 @@ export default React.forwardRef((props,ref) => {
             return [col, String(dir).toLowerCase()];
         });
     }
-    return <PureDataTable ref={ref} {...options}/>
-})
+
+    return <PureDataTable ref={__SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} {...options}/>;
+}
+
 
 // function fixOrder(order, map) {
 //     if(!order) return;

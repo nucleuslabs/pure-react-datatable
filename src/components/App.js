@@ -1,7 +1,7 @@
 import React, {Fragment} from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import {hot} from 'react-hot-loader'
-import DataTable from './DataTable';
+import DataTable,{makeDataTable} from './DataTable';
 import StarEmpty from '../icons/star-empty.svg';
 import StarFull from '../icons/star-solid.svg';
 import CheckCircle from '../icons/check-circle.svg';
@@ -156,25 +156,32 @@ class ActionButton extends React.Component {
 class App extends React.Component {
     
     fullReset = ev => {
-        this.remoteDT.draw('full-reset');
+        this.dt.draw('full-reset');
     }
 
     fullHold = ev => {
-        this.remoteDT.draw('full-hold');
+        this.dt.draw('full-hold');
     }
 
     page = ev => {
-        this.remoteDT.draw('page');
+        this.dt.draw('page');
+    }
+
+    constructor(props) {
+        super(props);
+        this.dt = makeDataTable();
     }
     
     render() {
+        const {Component: DT2} = this.dt;
+
         return (
             <ErrorBoundary>
                 <h1>DataTable Examples</h1>
                 <h2>Local data, datatables.net CSS</h2>
                 <DataTable theme={cssBridge} {...jobsTable} />
                 <h2>Remote data, custom CSS</h2>
-                <DataTable ref={n => this.remoteDT = n} theme={cssCustom} {...config} />
+                <DT2 theme={cssCustom} {...config}/>
                 <ButtonRow>
                     <ActionButton onClick={this.fullReset}>full-reset</ActionButton>
                     <ActionButton onClick={this.fullHold}>full-hold</ActionButton>
