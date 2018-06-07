@@ -16,7 +16,6 @@ import {
 } from '../util';
 
 import ActionLink from './ActionLink';
-import {noop} from 'lodash';
 
 const ASC = 'asc';
 const DESC = 'desc';
@@ -552,79 +551,89 @@ function DataTableCell({attrs}) {
     return <td {...attrs}/>;
 }
 
-export function makeDataTable() {
-    const ref = React.createRef();
+export default class DataTable extends React.Component{
+    _ref = React.createRef();
 
-    return {
-        draw: (...args) => ref.current && ref.current.draw(...args),
-        Component: (props) => <DataTable {...props} __SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED={ref}/>,
+    static propTypes = {api: PropTypes.func, ...PureDataTable.propTypes};
+
+    componentDidMount() {
+        if(this.props.api) {
+            this.props.api({
+                draw: (...args) => this._ref.current.draw(...args)
+            });
+        }
     }
-}
 
-export default function DataTable({__SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,...props}) {
-    const options = defaultsDeep(props, {
-        className: undefined,
-        theme: __map,
-        data: [],
-        rowKey: (row, idx) => row._id || row.id || row._key || row.key || idx,
-        columnKey: (col, idx) => col._id || col.id || col._key || col.key || col.name || idx,
-        language: {
-            // https://datatables.net/reference/option/language
-            lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
-            search: ({Input}) => <label><span>Search:</span><Input/></label>,
-            info: ({start, end, total, max, length}) => <Fragment>
-                <Fragment>Showing </Fragment>
-                {start === 1 && length >= total
-                    ? <Fragment>all</Fragment>
-                    : <Fragment>{start} to {end} of</Fragment>
-                }
-                <Fragment> {total} entries</Fragment>
-                {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
-            </Fragment>,
-            infoLoading: "Showing … to … of … entries",
-            infoEmpty: "Showing all 0 entries",
-            loadingRecords: "Loading…",
-            processing: ({theme}) => <div className={theme.processing}>Processing…</div>,
-            zeroRecords: "No matching records found",
-            emptyTable: "No data available in table",
-            sortIcons: null,
-        },
-        lengthMenu: [10, 25, 50, 100],
-        searchDelay: 400,
-        columns: [],
-        start: 0,
-        length: props.lengthMenu && props.lengthMenu.length ? props.lengthMenu[0] : 10,
-        search: {
-            value: '',
-            regex: false,
-        },
-        order: [[0, ASC]],
-        rowComponent: DataTableRow,
-        cellComponent: DataTableCell,
-    });
+    componentWillUnmount() {
+        if(this.props.api) {
+            this.props.api(null);
+        }
+    }
 
-    if(options.order.length) {
-        // https://datatables.net/reference/option/order
-        const orderMap = {};
-        for(let i = 0; i < options.columns.length; ++i) {
-            if(isString(options.columns[i].name)) {
-                orderMap[options.columns[i].name] = i;
-            } else if(isString(options.columns[i].data)) {
-                orderMap[options.columns[i].data] = i;
-            }
-        }
-        if(!Array.isArray(options.order[0])) {
-            options.order = [options.order];
-        }
-        options.order = options.order.map(([col, dir]) => {
-            if(isString(col)) {
-                col = orderMap[col];
-            }
-            return [col, String(dir).toLowerCase()];
+    render(){
+        const {api, ...options} = defaultsDeep(this.props, {
+            className: undefined,
+            theme: __map,
+            data: [],
+            rowKey: (row, idx) => row._id || row.id || row._key || row.key || idx,
+            columnKey: (col, idx) => col._id || col.id || col._key || col.key || col.name || idx,
+            language: {
+                // https://datatables.net/reference/option/language
+                lengthMenu: ({Menu}) => <label>Show <Menu/> entries</label>,
+                search: ({Input}) => <label><span>Search:</span><Input/></label>,
+                info: ({start, end, total, max, length}) => <Fragment>
+                    <Fragment>Showing </Fragment>
+                    {start === 1 && length >= total
+                        ? <Fragment>all</Fragment>
+                        : <Fragment>{start} to {end} of</Fragment>
+                    }
+                    <Fragment> {total} entries</Fragment>
+                    {total < max && <Fragment> (filtered from {max} total entries)</Fragment>}
+                </Fragment>,
+                infoLoading: "Showing … to … of … entries",
+                infoEmpty: "Showing all 0 entries",
+                loadingRecords: "Loading…",
+                processing: ({theme}) => <div className={theme.processing}>Processing…</div>,
+                zeroRecords: "No matching records found",
+                emptyTable: "No data available in table",
+                sortIcons: null,
+            },
+            lengthMenu: [10, 25, 50, 100],
+            searchDelay: 400,
+            columns: [],
+            start: 0,
+            length: this.props.lengthMenu && this.props.lengthMenu.length ? this.props.lengthMenu[0] : 10,
+            search: {
+                value: '',
+                regex: false,
+            },
+            order: [[0, ASC]],
+            rowComponent: DataTableRow,
+            cellComponent: DataTableCell,
         });
-    }
+        if(options.order.length) {
+            // https://datatables.net/reference/option/order
+            const orderMap = {};
+            for(let i = 0; i < options.columns.length; ++i) {
+                if(isString(options.columns[i].name)) {
+                    orderMap[options.columns[i].name] = i;
+                } else if(isString(options.columns[i].data)) {
+                    orderMap[options.columns[i].data] = i;
+                }
+            }
+            if(!Array.isArray(options.order[0])) {
+                options.order = [options.order];
+            }
+            options.order = options.order.map(([col, dir]) => {
+                if(isString(col)) {
+                    col = orderMap[col];
+                }
+                return [col, String(dir).toLowerCase()];
+            });
+        }
 
-    return <PureDataTable ref={__SECRET_REF_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} {...options}/>;
+        return <PureDataTable ref={this._ref} {...options}/>;
+    }
 }
 
 
