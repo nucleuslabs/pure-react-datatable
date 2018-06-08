@@ -169,6 +169,31 @@ It expects you to return a `Promise`, so you can either do this client-side or s
 
 If you simply forward these arguments to your server, it should work with any existing endpoints you have, if you previously used datatables.net -- as long as you are using the 1.10+ API (hungarian notation not supported).
 
+
+### API
+
+To get access to the API methods from a parent component use the api prop to bind a local copy of the api methods to an object in the parent component. This is handy for custom external filtering.
+
+**API Methods:**
+
+- draw([paging]) - Works similar to Datatables draw API function.
+
+**Example**
+
+```js
+function refreshMyPureDataTable(){
+    this.myDtApi.draw();
+}
+
+function render(){
+	return <PureDataTable api={api => this.myDtApi = api}/>;
+}
+
+```
+
+
+
+
 ### License
 
 MIT.
