@@ -172,23 +172,24 @@ If you simply forward these arguments to your server, it should work with any ex
 
 ### API
 
-To get access to the API methods from a parent component use the api prop to bind a local copy of the api methods to an object in the parent component. This is handy for custom external filtering.
+To get access to the API methods from a parent component use the `api` prop to bind a local copy of the api methods to an object in the parent component. This is handy for custom external filtering.
 
-**API Methods:**
+#### API Methods:
 
-- draw([paging]) - Works similar to Datatables draw API function.
+- `draw([paging])` – Works similar to [datatables.net draw API function](https://datatables.net/reference/api/draw).
 
-**Example**
+###### Example
 
 ```js
-function refreshMyPureDataTable(){
-    this.myDtApi.draw();
+class MyComponent extends React.Component {
+    refreshMyPureDataTable() {
+        this.myDtApi.draw();
+    }
+    
+    render() {
+        return <PureDataTable api={api => this.myDtApi = api}/>;
+    }
 }
-
-function render(){
-	return <PureDataTable api={api => this.myDtApi = api}/>;
-}
-
 ```
 
 
