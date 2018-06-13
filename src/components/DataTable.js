@@ -43,8 +43,10 @@ class PureDataTable extends React.Component {
         this._refreshNow();
     }
 
-    componentDidUpdate() {
-        this._refresh();
+    componentDidUpdate(prevProps) {
+        if(this.props.data !== prevProps.data) {
+            this._refresh();
+        }
     }
 
     async _refreshNow(partialState) {
