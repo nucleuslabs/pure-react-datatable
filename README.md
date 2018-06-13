@@ -114,7 +114,7 @@ const theme = {
 }
 ```
 
-If you `styled-components` or similar CSS-in-JS, you're hooped. You can use the undocumented `cellComponent` and `rowComponent` props to provide your custom styled components, but `<DataTable>` isn't *fully* customizable yet.
+If you use `styled-components` or similar CSS-in-JS, you're hooped. You can use the undocumented `cellComponent` and `rowComponent` props to provide your custom styled components, but `<DataTable>` isn't *fully* customizable yet.
 
 The defaults for those are simple:
 
@@ -128,7 +128,7 @@ function DataTableCell({attrs}) {
 }
 ```
 
-So they should be simple to override.
+So they should be easy to override.
 
 ### Usage/integration
 
@@ -191,8 +191,6 @@ class MyComponent extends React.Component {
     }
 }
 ```
-
-
 
 
 ### License
