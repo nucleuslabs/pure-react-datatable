@@ -558,10 +558,12 @@ function DataTableCell({attrs}) {
 }
 
 export default class DataTable extends React.Component{
-    _ref = React.createRef();
-
     static propTypes = {api: PropTypes.func, ...PureDataTable.propTypes};
 
+    _createRef = c => {
+        this._ref = c;
+    };
+    
     componentDidMount() {
         if(this.props.api) {
             this.props.api({
@@ -638,7 +640,7 @@ export default class DataTable extends React.Component{
             });
         }
 
-        return <PureDataTable ref={this._ref} {...options}/>;
+        return <PureDataTable ref={this._createRef} {...options}/>;
     }
 }
 
