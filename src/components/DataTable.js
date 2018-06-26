@@ -567,7 +567,7 @@ export default class DataTable extends React.Component{
     componentDidMount() {
         if(this.props.api) {
             this.props.api({
-                draw: (...args) => this._ref.current.draw(...args)
+                draw: (...args) => this._ref.draw(...args)
             });
         }
     }
