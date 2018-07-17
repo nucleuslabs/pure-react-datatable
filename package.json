@@ -1,6 +1,6 @@
 {
     "name": "pure-react-datatable",
-    "version": "0.3.6",
+    "version": "0.3.8",
     "license": "MIT",
     "browser": "src/components/DataTable.js",
     "module": "src/components/DataTable.js",
