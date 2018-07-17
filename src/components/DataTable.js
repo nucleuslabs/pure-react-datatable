@@ -60,7 +60,7 @@ class PureDataTable extends React.Component {
             let resp = await this.props.data({
                 draw: ++this._ajaxCounter,
                 start: state.start,
-                length: state.length,
+                length: this.props.paging ? state.length : -1,
                 search: state.search,
                 order: state.order.map(([column, dir]) => ({column, dir})),
                 columns: this.props.columns.map(c => pick(c, {
@@ -77,7 +77,7 @@ class PureDataTable extends React.Component {
             if(resp.draw < this._ajaxCounter) return;
             // TODO: if resp.data.length === resp.recordsTotal, switch to client-side filtering??
             // TODO: if server over-fetches (returns enough for page 2) allow going to next page without re-fetching?
-            const data = resp.data.slice(0, state.length);
+            const data = this.props.paging ? resp.data.slice(0, state.length) : resp.data;
             this.setState({
                 data,
                 loading: false,
@@ -110,7 +110,7 @@ class PureDataTable extends React.Component {
                 }
             }
             this.setState({
-                data: filteredData.slice(state.start, state.start + state.length),
+                data: this.props.paging ? filteredData.slice(state.start, state.start + state.length) : filteredData,
                 recordsTotal: this.props.data.length,
                 recordsFiltered: filteredData.length,
                 loading: false,
@@ -262,7 +262,7 @@ class PureDataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
 
     render() {
-        const {theme, columns, language, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
+        const {theme, columns, language, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
         const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
 
@@ -430,6 +430,7 @@ class PureDataTable extends React.Component {
                         }
                     </div> : null}
 
+                    {paging ?
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
                             ? <span className={cc([theme.button, theme.disabled])}>Previous</span>
@@ -446,7 +447,7 @@ class PureDataTable extends React.Component {
                             ? <span className={cc([theme.button, theme.disabled])}>Next</span>
                             : <ActionLink className={cc(theme.button)} onClick={this._incPage(1)}>Next</ActionLink>
                         }
-                    </div>
+                    </div> : null}
 
                     <span className={cc(theme.pageXofY)}>Page {currentPage + 1}{pageCount ?
                         <Fragment> of {pageCount}</Fragment> : null}</span>
@@ -537,6 +538,7 @@ PureDataTable.propTypes = {
     // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
     rowKey: PropTypes.func,
     columnKey: PropTypes.func,
+    paging: PropTypes.bool,
     lengthMenu: PropTypes.arrayOf(PropTypes.number),
     // https://datatables.net/reference/option/searchDelay
     searchDelay: PropTypes.number,
@@ -610,6 +612,7 @@ export default class DataTable extends React.Component{
             searchDelay: 400,
             columns: [],
             start: 0,
+            paging: true,
             length: this.props.lengthMenu && this.props.lengthMenu.length ? this.props.lengthMenu[0] : 10,
             search: {
                 value: '',
