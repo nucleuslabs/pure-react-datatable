@@ -67,10 +67,10 @@ const config = {
             draw,
             recordsTotal: CLIENTS.length,
             recordsFiltered: CLIENTS.length,
-            data: CLIENTS.slice(start,start+length),
+            data: length == -1 ? CLIENTS : CLIENTS.slice(start,start+length),
         }
     },
-    
+
     columns: [
         {
             title: <Icon><StarEmpty title="Star"/></Icon>,
