@@ -382,6 +382,7 @@ class PureDataTable extends React.Component {
                                     index: n,
                                     data: value,
                                     row: row,
+                                    columnDef: col,
                                 };
                             });
 
