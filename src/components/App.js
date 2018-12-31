@@ -1,22 +1,23 @@
 import React, {Fragment} from 'react';
 import ErrorBoundary from './ErrorBoundary';
-import {hot} from 'react-hot-loader'
+import {hot} from 'react-hot-loader';
 import DataTable from './DataTable';
-import StarEmpty from '../icons/star-empty.svg';
-import StarFull from '../icons/star-solid.svg';
-import CheckCircle from '../icons/check-circle.svg';
-import TimesCircle from '../icons/times-circle.svg';
+import StarEmpty from '../icons/regular/star.svg';
+import StarFull from '../icons/regular/star-half.svg';
+import CheckCircle from '../icons/solid/check-circle.svg';
+import TimesCircle from '../icons/solid/times-circle.svg';
 import css from '../styles/misc.less';
 import JOBS from '../data/jobs';
 import CLIENTS from '../data/clients';
-import SortIcon from '../icons/sort';
-import SortUp from '../icons/sort-up';
-import SortDown from '../icons/sort-down';
+import SortIcon from '../icons/solid/sort.svg';
+import SortUp from '../icons/solid/sort-up.svg';
+import SortDown from '../icons/solid/sort-down.svg';
 import Icon from './Icon';
 
 import cssBridge from '../styles/bridge';
 import cssCustom from '../styles/datatable';
-
+//import PlusCircle from '../icons/solid/plus-circle.svg';
+//import MinusCircle from '../icons/solid/minus-circle.svg';
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
 }
@@ -70,7 +71,24 @@ const config = {
             data: length == -1 ? CLIENTS : CLIENTS.slice(start,start+length),
         }
     },
-
+    /* Add sublist functionality to datatable */
+    sublist: {
+        /* Change default open icon - Default: <PlusCircle/> */
+        // iconOpen: <Icon><PlusCircle/></Icon>,
+        /* Change default close icon - Default: <MinusCircle/> */
+        // iconClose: <Icon><MinusCircle/></Icon>,
+        /* Modify the column width - Default: '15px' */
+        // width: '50px',
+        /* Conditionally hide the toggle for the given row based on row value - Default: Show all rows */
+        // hide: ({row}) => row._id === 30608,
+        /* Column Title - Default: '' */
+        // title: '*',
+        /* Restrict more than one item been open at once - Default: false */
+        accordion: true,
+        render: ({row}) => {
+            return <div><strong>Comments:</strong> <em>{row.comments}</em></div>;
+        }
+    },
     columns: [
         {
             title: <Icon><StarEmpty title="Star"/></Icon>,
@@ -101,7 +119,7 @@ const config = {
         {
             title: "Active",
             data: 'active',
-            render: ({data}) => data 
+            render: ({data}) => data
                 ? <Icon className={css.active}><CheckCircle/></Icon>
                 : <Icon className={css.inactive}><TimesCircle/></Icon>,
             className: css.center,
@@ -140,19 +158,19 @@ const jobsTable = {
 const ButtonRow = ({children}) => <div className={css.buttonRow}>{children}</div>;
 
 class ActionButton extends React.Component {
-    
+
     click = ev => {
         ev.preventDefault();
         if(this.props.onClick) {
             this.props.onClick(ev);
         }
     };
-    
+
     render() {
         return <button className={css.button} {...this.props} onClick={this.click}/>;
     }
 }
-    
+
 class App extends React.Component {
 
     api = (api) => {

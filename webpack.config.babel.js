@@ -79,7 +79,7 @@ export default {
             },
             {
                 test: /\.svg($|\?)/i,
-                use: [babelLoader, 'svg-loader'],
+                use: ['react-svg-loader'],
             },
             {
                 test: /\.css$/,
