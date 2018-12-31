@@ -14,12 +14,16 @@ import {
     deepMerge,
     arraySplice, pick, __map, isString, isArray
 } from '../util';
+import PlusCircle from '../icons/solid/plus-circle.svg';
+import MinusCircle from '../icons/solid/minus-circle.svg';
 
 import ActionLink from './ActionLink';
+import Icon from './Icon';
 
 const ASC = 'asc';
 const DESC = 'desc';
 const PAGE_LINKS = 7; // todo: make this a prop/option?
+import css from '../styles/datatable.less';
 
 class PureDataTable extends React.Component {
 
@@ -28,9 +32,49 @@ class PureDataTable extends React.Component {
     constructor(props) {
         super(props);
         this._refresh = debounce(this._refreshNow, this.props.searchDelay);
+
+        /* Handle Sublist */
+        let columns = props.columns;
+        let collapsedRowIds = [];
+        if(props.sublist) {
+            let iconOpen = props.sublist.iconOpen ? props.sublist.iconOpen : <Icon className={css.open}><PlusCircle/></Icon>;
+            let iconClose = props.sublist.iconClose ? props.sublist.iconClose : <Icon className={css.closed}><MinusCircle/></Icon>;
+            let accordion = props.sublist.accordion;
+            let title = props.sublist.title ? props.sublist.title : '';
+            let width = props.sublist.width ? props.sublist.width : '15px';
+            columns.unshift({
+                title: title,
+                orderable: false,
+                width: width,
+                maxWidth: width,
+                minWidth: width,
+                render: ({row}) => {
+                    if(isFunction(props.sublist.hide) && props.sublist.hide({row})) {
+                        return null;
+                    } else {
+                        let expandedRows = this.state.collapsedRowIds;
+                        let currentIndex = expandedRows.indexOf(row._id);
+                        let text = currentIndex !== -1 ? iconClose : iconOpen;
+
+                        return <div
+                            style={{textAlign: 'center'}}
+                            onClick={() => {
+                                currentIndex < 0 ? expandedRows.push(row._id) : expandedRows.splice(currentIndex, 1);
+                                if(accordion && expandedRows.length > 1) {
+                                    expandedRows.splice(0, 1);
+                                }
+                                this.setState({collapsedRowIds: expandedRows});
+                            }}>{text}</div>;
+                    }
+                }
+            });
+        }
+
         this.state = {
             ...pick(props, ['start', 'length', 'search', 'order']),
             recordsTotal: null,
+            collapsedRowIds: collapsedRowIds,
+            columns: columns,
             recordsFiltered: null,
             data: [],
             loading: true,
@@ -203,7 +247,7 @@ class PureDataTable extends React.Component {
         this[deb ? '_refresh' : '_refreshNow'](partialState);
         this.setState(mergeState(partialState));
     }
-    
+
     draw = (paging=true) => {
         // https://datatables.net/reference/api/draw()
         if(paging === 'full-reset' || paging === true) {
@@ -262,8 +306,8 @@ class PureDataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
 
     render() {
-        const {theme, columns, language, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
-        const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
+        const {sublist, theme, language, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
+        const {columns, data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
 
         const sortIdxMap = columns.map((col, n) => order.findIndex(o => o[0] === n));
@@ -354,7 +398,7 @@ class PureDataTable extends React.Component {
                                 // console.log(row,col,m,n);
                                 // let value;
                                 // if(Array.isArray(row)) {
-                                //     value 
+                                //     value
                                 // }
                                 let value = this._getValue(row, n, 'display');
                                 let cell;
@@ -388,7 +432,10 @@ class PureDataTable extends React.Component {
 
                             return render(rowComponent, {
                                 key: rowKey(row, m),
+                                sublistVisible: !!(this.state.collapsedRowIds.indexOf(rowKey(row, m)) >= 0),
                                 attrs: {
+                                    sublist: sublist,
+                                    row: row,
                                     role: "row",
                                     className: cc([theme.tr, theme.drow, m % 2 === 0 ? theme.even : theme.odd]),
                                     children: cells.map(c => render(cellComponent,c)),
@@ -396,9 +443,9 @@ class PureDataTable extends React.Component {
                                 data: row,
                                 index: m,
                             });
-                            
+
                             // TODO: some kind of "End of list" padding so that the final page isn't shorter than the rest?
-                            
+
                         }) : (
                             // TODO: some kind of filler cell component while the data is loading, so we have some lorem to put behind the loading splash?
                             loading ? (
@@ -472,24 +519,24 @@ function PageNumbers({currentPage,pageCount,theme,setPage}) {
     } else {
         pageNumbers = [0,currentPage-1,currentPage,currentPage+1,lastPage];
     }
-    
+
     const spacer = <span className={cc(theme.pageNumberSpacer)}>⋯</span>;
     let prevPage = -1;
-    
+
     return pageNumbers.map(pg => {
-        
+
         let ret = (
             pg === currentPage
                 ? <span key={pg} className={cc([theme.button, theme.current])}>{pg + 1}</span>
                 : <ActionLink key={pg} className={cc([theme.button])} onClick={setPage(pg)}>{pg + 1}</ActionLink>
         );
-        
+
         if(pg > prevPage + 1) {
             ret = <Fragment key={pg}>{spacer}{ret}</Fragment>
         }
-        
+
         prevPage = pg;
-        
+
         return ret;
     });
 }
@@ -500,6 +547,15 @@ const funcOrNode = PropTypes.oneOfType([PropTypes.func, PropTypes.node])
 PureDataTable.propTypes = {
     theme: PropTypes.object,
     data: PropTypes.oneOfType([PropTypes.func, PropTypes.array]),
+    sublist: PropTypes.shape({
+        iconOpen: PropTypes.instanceOf('Icon'),
+        iconClose: PropTypes.instanceOf('Icon'),
+        accordion: PropTypes.bool,
+        hide: PropTypes.func,
+        width: PropTypes.string,
+        title: PropTypes.string,
+        render: PropTypes.func.isRequired,
+    }),
     columns: PropTypes.arrayOf(PropTypes.oneOfType([
         PropTypes.array,
         PropTypes.shape({
@@ -552,8 +608,19 @@ PureDataTable.propTypes = {
     cellComponent: PropTypes.func,
 }
 
-function DataTableRow({attrs}) {
-    return <tr {...attrs}/>;
+function DataTableRow({attrs, ...props}) {
+    if(props.sublistVisible) {
+        let length = attrs.children.length;
+        return <Fragment>
+            <tr {...attrs}/>
+            <tr className={attrs.className}>
+                <td colSpan="1"/>
+                <td style={{padding: '10px'}} colSpan={length - 1}>{attrs.sublist.render({row: attrs.row})}</td>
+            </tr>
+        </Fragment>;
+    } else {
+        return <tr {...attrs}/>;
+    }
 }
 
 function DataTableCell({attrs}) {
@@ -566,7 +633,7 @@ export default class DataTable extends React.Component{
     _createRef = c => {
         this._ref = c;
     };
-    
+
     componentDidMount() {
         if(this.props.api) {
             this.props.api({
@@ -586,6 +653,7 @@ export default class DataTable extends React.Component{
             className: undefined,
             theme: __map,
             data: [],
+            sublist: null,
             rowKey: (row, idx) => row._id || row.id || row._key || row.key || idx,
             columnKey: (col, idx) => col._id || col.id || col._key || col.key || col.name || idx,
             language: {
