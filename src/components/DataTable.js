@@ -613,7 +613,7 @@ function DataTableRow({attrs, ...props}) {
         let length = attrs.children.length;
         return <Fragment>
             <tr {...attrs}/>
-            <tr className={attrs.className}>
+            <tr className={cc([attrs.className, css.subList])}>
                 <td colSpan="1"/>
                 <td style={{padding: '10px'}} colSpan={length - 1}>{attrs.sublist.render({row: attrs.row})}</td>
             </tr>
