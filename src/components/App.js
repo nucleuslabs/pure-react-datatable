@@ -77,8 +77,8 @@ const config = {
         // iconOpen: <Icon><PlusCircle/></Icon>,
         /* Change default close icon - Default: <MinusCircle/> */
         // iconClose: <Icon><MinusCircle/></Icon>,
-        /* Modify the column width - Default: '15px' */
-        // width: '50px',
+        /* Modify the column width - Default: 'auto' */
+         width: '15px',
         /* Conditionally hide the toggle for the given row based on row value - Default: Show all rows */
         // hide: ({row}) => row._id === 30608,
         /* Column Title - Default: '' */
