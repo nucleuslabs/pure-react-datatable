@@ -41,7 +41,7 @@ class PureDataTable extends React.Component {
             let iconClose = props.sublist.iconClose ? props.sublist.iconClose : <Icon className={css.closed}><MinusCircle/></Icon>;
             let accordion = props.sublist.accordion;
             let title = props.sublist.title ? props.sublist.title : '';
-            let width = props.sublist.width ? props.sublist.width : 'auto';
+            let width = props.sublist.width ? props.sublist.width : '15px';
             columns.unshift({
                 title: title,
                 orderable: false,
