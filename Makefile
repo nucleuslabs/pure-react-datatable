@@ -4,13 +4,25 @@ SRC_FILES = $(shell find src -type f)
 .PHONY: publish
 
 wds: yarn.lock
-	BABEL_ENV=webpack $(NM)/webpack-dev-server
+	BABEL_ENV=webpack $(NM)/webpack-dev-server --mode=development
 
 dist: yarn.lock $(SRC_FILES)
-	NODE_ENV=production $(NM)/bundilio
+	BABEL_ENV=webpack $(NM)/webpack --mode=production
 
 publish: dist
-	cd dist && npm publish
+	yarn version
+	cp package.json dist/package.json
+	cp README.md dist/README.md
+	yarn publish dist
+
+publish-latest: dist
+	yarn version
+	cp package.json dist/package.json
+	cp README.md dist/README.md
+	yarn publish dist --tag latest
+
+test: yarn.lock dist
+	BABEL_ENV=test node_modules/.bin/jest --coverage
 
 yarn.lock:: package.json
 	@yarn install --production=false
@@ -22,6 +34,7 @@ yarn.lock:: node_modules
 
 clean:
 	rm -rf node_modules
+	rm -rf dist
 
 node_modules:
 	mkdir -p $@

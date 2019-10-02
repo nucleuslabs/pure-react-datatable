@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 export default function ActionLink({onClick,...props}) {
     if(onClick) {
@@ -12,9 +11,5 @@ export default function ActionLink({onClick,...props}) {
             ev.preventDefault();
         }
     }
-    return <a href="javascript:void 0" {...props} />
-}
-
-ActionLink.propTypes = {
-    onClick: PropTypes.func.isRequired,
+    return <a href="#" {...props} />
 }
