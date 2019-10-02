@@ -1,9 +1,9 @@
 {
   "name": "pure-react-datatable",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
-  "browser": "src/components/DataTable.js",
-  "module": "src/components/DataTable.js",
+  "browser": "main.js",
+  "module": "main.js",
   "devDependencies": {
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
