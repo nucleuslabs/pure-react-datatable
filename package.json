@@ -65,7 +65,7 @@
     "type": "hg",
     "url": "https://bitbucket.org/nucleuslabs/pure-react-datatable"
   },
-  "scritpts": {
+  "scripts": {
     "test": "jest"
   },
   "jest": {
