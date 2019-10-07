@@ -4,7 +4,7 @@ import ScriptExtHtmlWebpackPlugin from 'script-ext-html-webpack-plugin';
 
 export default (env, argv) => {
     const src = `${__dirname}/src`;
-    const publicDir = `${__dirname}/dist`;
+    const dist = `${__dirname}/dist`;
 
     const devMode = argv.mode === 'development';
 
@@ -45,6 +45,9 @@ export default (env, argv) => {
         output: {
             library: "PureReactDatatable",
             libraryTarget: "umd",
+            filename: "index.js",
+            path: dist,
+            globalObject: "this"
         },
         resolveLoader: {
             modules: ['node_modules', `${__dirname}/webpack/loaders`]
@@ -134,7 +137,7 @@ export default (env, argv) => {
             hot: true,
             inline: true,
             port: 8080,
-            contentBase: publicDir,
+            contentBase: dist,
             historyApiFallback: true,
             stats: 'errors-only',
             headers: {
