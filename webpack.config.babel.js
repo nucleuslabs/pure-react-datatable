@@ -1,9 +1,10 @@
 import {ProvidePlugin, HotModuleReplacementPlugin} from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ScriptExtHtmlWebpackPlugin from 'script-ext-html-webpack-plugin';
+import path from 'path';
 
 export default (env, argv) => {
-    const src = `${__dirname}/src`;
+    const src = path.resolve(`${__dirname}/src`);
     const dist = `${__dirname}/dist`;
 
     const devMode = argv.mode === 'development';
@@ -41,7 +42,7 @@ export default (env, argv) => {
     };
 
     let config = {
-        entry: `${__dirname}/src/components/DataTable.js`,
+        entry: `${src}/components/DataTable.js`,
         output: {
             library: "PureReactDatatable",
             libraryTarget: "umd",
@@ -102,13 +103,14 @@ export default (env, argv) => {
         }
     };
     if(devMode) {
+        config.context  = src;
         config.devtool = 'source-map';
         config.entry = {
             app: [
                 'react-hot-loader/patch',
-                `${__dirname}/src/index.js`,
+                `${src}/index.js`,
             ],
-            base: `${__dirname}/src/styles/base.less`
+            base: `${src}/styles/base.less`
         };
         config.plugins.push(
             new ProvidePlugin({
@@ -116,15 +118,15 @@ export default (env, argv) => {
             }),
             new HotModuleReplacementPlugin,
             new HtmlWebpackPlugin({
-                template: 'index.html',
-                filename: 'index.html',
+                template: `index.html`,
+                filename: `index.html`,
                 minify: {
                     collapseWhitespace: true,
                     collapseBooleanAttributes: true,
                     removeComments: true,
                 },
                 hash: true,
-                inject: 'head',
+                inject: 'body',
             }),
             new ScriptExtHtmlWebpackPlugin({
                 defer: 'app',
@@ -137,7 +139,7 @@ export default (env, argv) => {
             hot: true,
             inline: true,
             port: 8080,
-            contentBase: dist,
+            contentBase: src,
             historyApiFallback: true,
             stats: 'errors-only',
             headers: {
