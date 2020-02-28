@@ -367,7 +367,7 @@ class PureDataTable extends React.Component {
                                             row: m,
                                             col: n,
                                         },
-                                        dtState: this.state,
+                                        dtState: {...this.state},
                                         ...extraProps
                                     });
                                 } else {
