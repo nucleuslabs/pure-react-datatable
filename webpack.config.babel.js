@@ -42,7 +42,7 @@ export default (env, argv) => {
     };
 
     let config = {
-        entry: `${src}/components/DataTable.js`,
+        entry: ["@babel/polyfill", `${src}/components/DataTable.js`],
         output: {
             library: "PureReactDatatable",
             libraryTarget: "umd",
@@ -107,6 +107,7 @@ export default (env, argv) => {
         config.devtool = 'source-map';
         config.entry = {
             app: [
+                "@babel/polyfill",
                 'react-hot-loader/patch',
                 `${src}/index.js`,
             ],
