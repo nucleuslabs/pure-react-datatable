@@ -263,7 +263,7 @@ class PureDataTable extends React.Component {
 
     render() {
         const {theme, columns, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
-        const language = Object.assign({ next: 'Next', previous: 'Previous', of: 'of' }, ...this.props.language);
+        const language = Object.assign({ next: 'Next', previous: 'Previous', of: 'of' }, this.props.language || {});
         const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
         const sortIdxMap = columns.map((col, n) => order.findIndex(o => o[0] === n));
