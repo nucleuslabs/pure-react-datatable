@@ -12,7 +12,7 @@ import {
     render,
     clamp,
     deepMerge,
-    arraySplice, pick, __map, isString, isArray
+    arraySplice, pick, __map, isString
 } from '../util';
 
 import ActionLink from './ActionLink';
@@ -262,10 +262,10 @@ class PureDataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
 
     render() {
-        const {theme, columns, language, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
+        const {theme, columns, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
+        const language = Object.assign({ next: 'Next', previous: 'Previous', of: 'of' }, ...this.props.language);
         const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
-
         const sortIdxMap = columns.map((col, n) => order.findIndex(o => o[0] === n));
         const sortDirMap = sortIdxMap.map(idx => idx < 0 ? null : order[idx][1]);
         // console.log(sortDirMap);
@@ -436,7 +436,7 @@ class PureDataTable extends React.Component {
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
                             ? <span className={cc([theme.button, theme.disabled])}>Previous</span>
-                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(-1)}>Previous</ActionLink>
+                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(-1)}>{language.previous}</ActionLink>
                         }
 
                         {!recordsFiltered
@@ -446,13 +446,13 @@ class PureDataTable extends React.Component {
                         }
 
                         {currentPage >= pageCount - 1
-                            ? <span className={cc([theme.button, theme.disabled])}>Next</span>
-                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(1)}>Next</ActionLink>
+                            ? <span className={cc([theme.button, theme.disabled])}>{language.next}</span>
+                            : <ActionLink className={cc(theme.button)} onClick={this._incPage(1)}>{language.next}</ActionLink>
                         }
                     </div> : null}
 
                     <span className={cc(theme.pageXofY)}>Page {currentPage + 1}{pageCount ?
-                        <Fragment> of {pageCount}</Fragment> : null}</span>
+                        <Fragment>{language.of} {pageCount}</Fragment> : null}</span>
                 </div>
 
                 {loading && language.processing ? render(language.processing, extraProps) : null}
