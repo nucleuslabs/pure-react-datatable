@@ -262,8 +262,7 @@ class PureDataTable extends React.Component {
     // TODO: swipe right/left events?? assuming there's no horizontal scrolling
 
     render() {
-        const {theme, columns, paging, columnKey, rowKey, lengthMenu, className, rowComponent, cellComponent} = this.props;
-        const language = Object.assign({ next: 'Next', previous: 'Previous', of: 'of' }, this.props.language || {});
+        const {theme, columns, paging, columnKey, rowKey, language, lengthMenu, className, rowComponent, cellComponent} = this.props;
         const {data, loading, recordsFiltered, recordsTotal, start, length, search, order} = this.state;
         const {currentPage, pageCount} = this;
         const sortIdxMap = columns.map((col, n) => order.findIndex(o => o[0] === n));
@@ -536,6 +535,10 @@ PureDataTable.propTypes = {
         }),
 
         processing: funcOrNode,
+
+        next: PropTypes.string,
+        previous: PropTypes.string,
+        of: PropTypes.string,
     }),
     // https://www.apollographql.com/docs/react/advanced/caching.html#normalization
     rowKey: PropTypes.func,
@@ -609,6 +612,9 @@ export default class DataTable extends React.Component{
                 zeroRecords: "No matching records found",
                 emptyTable: "No data available in table",
                 sortIcons: null,
+                next: 'Next',
+                previous: 'Previous',
+                of: 'of'
             },
             lengthMenu: [10, 25, 50, 100],
             searchDelay: 400,
