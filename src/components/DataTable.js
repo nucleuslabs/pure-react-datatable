@@ -434,7 +434,7 @@ class PureDataTable extends React.Component {
                     {paging ?
                     <div className={cc(theme.pagination)} onWheel={this.handlePageWheel}>
                         {currentPage <= 0
-                            ? <span className={cc([theme.button, theme.disabled])}>Previous</span>
+                            ? <span className={cc([theme.button, theme.disabled])}>{language.previous}</span>
                             : <ActionLink className={cc(theme.button)} onClick={this._incPage(-1)}>{language.previous}</ActionLink>
                         }
 
