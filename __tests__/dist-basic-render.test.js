@@ -1,7 +1,7 @@
 import React from 'react';
 import {render} from "@testing-library/react";
 import ErrorBoundary from '../src/components/ErrorBoundary';
-import DataTable from '../dist/main';
+import DataTable from '../dist/index';
 import JOBS from '../src/data/jobs';
 
 const jobsTable = {
